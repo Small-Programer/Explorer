@@ -23,10 +23,12 @@ import com.example.explorer.ui.ActiveScreen
 import com.example.explorer.ui.DialogType
 import com.example.explorer.ui.ExplorerViewModel
 import com.example.explorer.ui.components.AppDialogHost
+import com.example.explorer.ui.components.AppDrawerContent
 import com.example.explorer.ui.screens.*
 import com.example.explorer.ui.theme.ExplorerTheme
 import com.example.explorer.util.FileUtils
 import com.example.explorer.util.PermissionUtils
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -75,7 +77,9 @@ class MainActivity : ComponentActivity() {
 fun MainAppContent(viewModel: ExplorerViewModel) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
-    var selectedTab by remember { mutableIntStateOf(1) } // Default tab: Explorar (Google style)
+    var selectedTab by remember { mutableIntStateOf(1) } // Default tab: Explorar
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(uiState.toastMessage) {
         uiState.toastMessage?.let { msg ->
@@ -87,6 +91,9 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
     // Manejo de botón Atrás
     BackHandler(enabled = true) {
         when {
+            drawerState.isOpen -> {
+                coroutineScope.launch { drawerState.close() }
+            }
             uiState.selectedCategory != null -> viewModel.closeCategory()
             uiState.activeScreen == ActiveScreen.TRASH ||
             uiState.activeScreen == ActiveScreen.SAFE_FOLDER ||
@@ -107,7 +114,45 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
         }
     }
 
-    Scaffold(
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            AppDrawerContent(
+                currentScreen = uiState.activeScreen,
+                storageInfo = uiState.storageInfo,
+                onNavigateHome = {
+                    selectedTab = 1
+                    viewModel.setScreen(ActiveScreen.BROWSE)
+                },
+                onNavigateInternalStorage = {
+                    viewModel.navigateTo(viewModel.uiState.value.currentPath)
+                },
+                onNavigateCategory = { cat ->
+                    viewModel.openCategory(cat)
+                },
+                onNavigateTrash = {
+                    viewModel.setScreen(ActiveScreen.TRASH)
+                },
+                onNavigateSafeFolder = {
+                    viewModel.setScreen(ActiveScreen.SAFE_FOLDER)
+                },
+                onNavigateFavorites = {
+                    viewModel.setScreen(ActiveScreen.FAVORITES)
+                },
+                onNavigateAppManager = {
+                    viewModel.setScreen(ActiveScreen.APP_MANAGER)
+                },
+                onNavigateClean = {
+                    selectedTab = 0
+                    viewModel.setScreen(ActiveScreen.CLEAN)
+                },
+                onCloseDrawer = {
+                    coroutineScope.launch { drawerState.close() }
+                }
+            )
+        }
+    ) {
+        Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
             if (uiState.selectedCategory == null &&
@@ -232,6 +277,7 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
                     val handled = viewModel.navigateUp()
                     if (!handled) viewModel.setScreen(ActiveScreen.BROWSE)
                 },
+                onMenuClick = { coroutineScope.launch { drawerState.open() } },
                 onBreadcrumbClick = { path -> viewModel.navigateTo(path) },
                 onFileClick = { item ->
                     if (item.isDirectory) {
@@ -287,6 +333,7 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
                 1 -> HomeScreen(
                     storageInfo = uiState.storageInfo,
                     recentFiles = uiState.recentFiles,
+                    onMenuClick = { coroutineScope.launch { drawerState.open() } },
                     onCategoryClick = { cat -> viewModel.openCategory(cat) },
                     onFileClick = { item ->
                         if (item.isDirectory) {
@@ -328,6 +375,7 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
                 )
             }
         }
+    }
     }
 
     AppDialogHost(

@@ -37,6 +37,7 @@ fun ExplorerScreen(
     searchResults: List<FileItem>,
     clipboard: ClipboardData?,
     onNavigateBack: () -> Unit,
+    onMenuClick: () -> Unit = {},
     onBreadcrumbClick: (String) -> Unit,
     onFileClick: (FileItem) -> Unit,
     onFileLongClick: (FileItem) -> Unit,
@@ -132,8 +133,15 @@ fun ExplorerScreen(
                         }
                     },
                     navigationIcon = {
-                        IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                        val isRoot = breadcrumbs.size <= 1
+                        if (isRoot) {
+                            IconButton(onClick = onMenuClick) {
+                                Icon(Icons.Default.Menu, contentDescription = "Menú")
+                            }
+                        } else {
+                            IconButton(onClick = onNavigateBack) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                            }
                         }
                     },
                     actions = {

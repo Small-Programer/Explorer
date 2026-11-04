@@ -44,6 +44,7 @@ fun HomeScreen(
     onFavoritesClick: () -> Unit,
     onSafeFolderClick: () -> Unit,
     onTrashClick: () -> Unit,
+    onAppsClick: () -> Unit = {},
     onInternalStorageClick: () -> Unit,
     onMoreClick: (FileItem) -> Unit,
     modifier: Modifier = Modifier
@@ -126,6 +127,14 @@ fun HomeScreen(
                         subtitle = "Archivos eliminados recientemente",
                         tint = MaterialTheme.colorScheme.error,
                         onClick = onTrashClick
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                    CollectionRowItem(
+                        icon = Icons.Default.Apps,
+                        title = "Gestor de aplicaciones",
+                        subtitle = "Ver apps y extraer APKs de backup",
+                        tint = CategoryApk,
+                        onClick = onAppsClick
                     )
                 }
             }

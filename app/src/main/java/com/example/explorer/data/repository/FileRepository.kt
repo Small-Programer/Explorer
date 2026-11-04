@@ -451,4 +451,152 @@ class FileRepository(private val context: Context) {
         scan(root)
         allFiles.sortedByDescending { it.lastModified }.take(limit)
     }
+
+    // --- Compresión y Descompresión ZIP ---
+    suspend fun zipFiles(sources: List<FileItem>, destinationZip: File): Result<FileItem> = withContext(Dispatchers.IO) {
+        try {
+            java.util.zip.ZipOutputStream(java.io.BufferedOutputStream(FileOutputStream(destinationZip))).use { out ->
+                for (source in sources) {
+                    addFileToZip(source.file, source.file.name, out)
+                }
+            }
+            Result.success(FileItem(destinationZip))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    private fun addFileToZip(file: File, entryName: String, zos: java.util.zip.ZipOutputStream) {
+        if (file.isDirectory) {
+            val dirEntry = if (entryName.endsWith("/")) entryName else "$entryName/"
+            zos.putNextEntry(java.util.zip.ZipEntry(dirEntry))
+            zos.closeEntry()
+            val children = file.listFiles() ?: return
+            for (child in children) {
+                addFileToZip(child, "$dirEntry${child.name}", zos)
+            }
+        } else {
+            FileInputStream(file).use { fis ->
+                val entry = java.util.zip.ZipEntry(entryName)
+                zos.putNextEntry(entry)
+                fis.copyTo(zos, bufferSize = 32 * 1024)
+                zos.closeEntry()
+            }
+        }
+    }
+
+    suspend fun extractZip(zipFile: File, targetDir: File): Result<Int> = withContext(Dispatchers.IO) {
+        var count = 0
+        try {
+            if (!targetDir.exists()) targetDir.mkdirs()
+            java.util.zip.ZipInputStream(java.io.BufferedInputStream(FileInputStream(zipFile))).use { zis ->
+                var entry: java.util.zip.ZipEntry? = zis.nextEntry
+                while (entry != null) {
+                    val destFile = File(targetDir, entry.name)
+                    val canonicalDest = destFile.canonicalPath
+                    val canonicalTarget = targetDir.canonicalPath
+                    if (!canonicalDest.startsWith(canonicalTarget)) {
+                        throw SecurityException("Zip Slip detected: ${entry.name}")
+                    }
+
+                    if (entry.isDirectory) {
+                        destFile.mkdirs()
+                    } else {
+                        destFile.parentFile?.mkdirs()
+                        FileOutputStream(destFile).use { fos ->
+                            zis.copyTo(fos, bufferSize = 32 * 1024)
+                        }
+                        count++
+                    }
+                    zis.closeEntry()
+                    entry = zis.nextEntry
+                }
+            }
+            Result.success(count)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // --- Lector y Editor de Texto Interno ---
+    suspend fun readTextFile(file: File): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            if (file.length() > 2 * 1024 * 1024) {
+                return@withContext Result.failure(Exception("El archivo supera 2 MB, demasiado grande para el editor"))
+            }
+            val text = file.readText(Charsets.UTF_8)
+            Result.success(text)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun writeTextFile(file: File, content: String): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            file.writeText(content, Charsets.UTF_8)
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // --- Checksum (MD5 y SHA-256) ---
+    suspend fun calculateChecksum(file: File, algorithm: String = "MD5"): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            if (file.isDirectory) return@withContext Result.failure(Exception("No aplicable a carpetas"))
+            val digest = java.security.MessageDigest.getInstance(algorithm)
+            FileInputStream(file).use { fis ->
+                val buffer = ByteArray(64 * 1024)
+                var bytesRead: Int
+                while (fis.read(buffer).also { bytesRead = it } != -1) {
+                    digest.update(buffer, 0, bytesRead)
+                }
+            }
+            val hashBytes = digest.digest()
+            val hex = hashBytes.joinToString("") { "%02x".format(it) }
+            Result.success(hex)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // --- Gestor de Aplicaciones (App Manager) ---
+    suspend fun getInstalledApps(): List<com.example.explorer.domain.model.AppInfoItem> = withContext(Dispatchers.IO) {
+        val pm = context.packageManager
+        val packages = pm.getInstalledPackages(0)
+        val appList = mutableListOf<com.example.explorer.domain.model.AppInfoItem>()
+
+        for (pkg in packages) {
+            val appInfo = pkg.applicationInfo ?: continue
+            val isSystem = (appInfo.flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0
+            val apkFile = File(appInfo.sourceDir)
+            if (apkFile.exists()) {
+                val label = pm.getApplicationLabel(appInfo).toString()
+                val icon = pm.getApplicationIcon(appInfo)
+                val item = com.example.explorer.domain.model.AppInfoItem(
+                    name = label,
+                    packageName = pkg.packageName,
+                    versionName = pkg.versionName ?: "1.0",
+                    icon = icon,
+                    sourceFile = apkFile,
+                    sizeBytes = apkFile.length(),
+                    isSystemApp = isSystem
+                )
+                appList.add(item)
+            }
+        }
+        appList.sortedBy { it.name.lowercase(java.util.Locale.ROOT) }
+    }
+
+    suspend fun backupAppApk(app: com.example.explorer.domain.model.AppInfoItem, targetDir: File): Result<FileItem> = withContext(Dispatchers.IO) {
+        try {
+            if (!targetDir.exists()) targetDir.mkdirs()
+            val cleanName = app.name.replace(Regex("[^a-zA-Z0-9_-]"), "_")
+            val destFile = File(targetDir, "${cleanName}_v${app.versionName}.apk")
+            copyRecursively(app.sourceFile, destFile)
+            Result.success(FileItem(destFile))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

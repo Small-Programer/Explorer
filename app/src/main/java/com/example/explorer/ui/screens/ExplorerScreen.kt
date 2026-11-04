@@ -50,6 +50,7 @@ fun ExplorerScreen(
     onCancelClipboard: () -> Unit,
     onCopySelected: () -> Unit,
     onCutSelected: () -> Unit,
+    onCompressSelected: () -> Unit = {},
     onDeleteSelected: () -> Unit,
     onShareSelected: () -> Unit,
     onSelectAll: () -> Unit,
@@ -170,6 +171,7 @@ fun ExplorerScreen(
                     selectedCount = selectedFiles.size,
                     onCopy = onCopySelected,
                     onCut = onCutSelected,
+                    onCompress = onCompressSelected,
                     onDelete = onDeleteSelected,
                     onShare = onShareSelected,
                     onSelectAll = onSelectAll

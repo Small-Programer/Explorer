@@ -90,7 +90,8 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
             uiState.selectedCategory != null -> viewModel.closeCategory()
             uiState.activeScreen == ActiveScreen.TRASH ||
             uiState.activeScreen == ActiveScreen.SAFE_FOLDER ||
-            uiState.activeScreen == ActiveScreen.FAVORITES -> {
+            uiState.activeScreen == ActiveScreen.FAVORITES ||
+            uiState.activeScreen == ActiveScreen.APP_MANAGER -> {
                 viewModel.setScreen(ActiveScreen.BROWSE)
             }
             uiState.isSelectionMode -> viewModel.clearSelection()
@@ -114,7 +115,8 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
                 uiState.activeScreen != ActiveScreen.EXPLORER_FOLDER &&
                 uiState.activeScreen != ActiveScreen.TRASH &&
                 uiState.activeScreen != ActiveScreen.SAFE_FOLDER &&
-                uiState.activeScreen != ActiveScreen.FAVORITES) {
+                uiState.activeScreen != ActiveScreen.FAVORITES &&
+                uiState.activeScreen != ActiveScreen.APP_MANAGER) {
 
                 NavigationBar {
                     NavigationBarItem(
@@ -203,6 +205,16 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
                 modifier = modifier
             )
         }
+        // 5. Gestor de Aplicaciones (App Manager)
+        else if (uiState.activeScreen == ActiveScreen.APP_MANAGER) {
+            AppManagerScreen(
+                apps = uiState.installedApps,
+                isLoading = uiState.isAppsLoading,
+                onBackClick = { viewModel.setScreen(ActiveScreen.BROWSE) },
+                onBackupApp = { app -> viewModel.backupApp(app) },
+                modifier = modifier
+            )
+        }
         // 5. Explorador de carpetas
         else if (uiState.activeScreen == ActiveScreen.EXPLORER_FOLDER) {
             ExplorerScreen(
@@ -224,6 +236,10 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
                 onFileClick = { item ->
                     if (item.isDirectory) {
                         viewModel.navigateTo(item.path)
+                    } else if (item.isZipArchive) {
+                        viewModel.extractZip(item.file)
+                    } else if (item.isTextFile) {
+                        viewModel.openTextEditor(item.file)
                     } else {
                         FileUtils.openFile(context, item)
                     }
@@ -239,6 +255,9 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
                 onCancelClipboard = { viewModel.clearClipboard() },
                 onCopySelected = { viewModel.copySelected() },
                 onCutSelected = { viewModel.cutSelected() },
+                onCompressSelected = {
+                    viewModel.showDialog(DialogType.CompressZip(uiState.selectedFiles.toList()))
+                },
                 onDeleteSelected = {
                     viewModel.showDialog(DialogType.DeleteConfirm(uiState.selectedFiles.toList()))
                 },
@@ -272,6 +291,10 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
                     onFileClick = { item ->
                         if (item.isDirectory) {
                             viewModel.navigateTo(item.path)
+                        } else if (item.isZipArchive) {
+                            viewModel.extractZip(item.file)
+                        } else if (item.isTextFile) {
+                            viewModel.openTextEditor(item.file)
                         } else {
                             FileUtils.openFile(context, item)
                         }
@@ -288,6 +311,7 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
                     onFavoritesClick = { viewModel.setScreen(ActiveScreen.FAVORITES) },
                     onSafeFolderClick = { viewModel.setScreen(ActiveScreen.SAFE_FOLDER) },
                     onTrashClick = { viewModel.setScreen(ActiveScreen.TRASH) },
+                    onAppsClick = { viewModel.setScreen(ActiveScreen.APP_MANAGER) },
                     onInternalStorageClick = { viewModel.navigateTo(viewModel.uiState.value.currentPath) },
                     onMoreClick = { item -> viewModel.showDialog(DialogType.FileDetails(item)) },
                     modifier = modifier
@@ -314,6 +338,9 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
         onDeleteConfirm = { items -> viewModel.deleteFiles(items) },
         onSetSafePin = { pin -> viewModel.setSafePin(pin) },
         onEnterSafePin = { pin -> viewModel.unlockSafeFolder(pin) },
+        onCompress = { items, zipName -> viewModel.compressFiles(items, zipName) },
+        onSaveTextFile = { file, content -> viewModel.saveTextFile(file, content) },
+        onCalculateChecksum = { item -> viewModel.loadChecksums(item) },
         currentSortOrder = uiState.sortOrder,
         onSelectSortOrder = { order -> viewModel.setSortOrder(order) }
     )

@@ -26,6 +26,9 @@ fun AppDialogHost(
     onDeleteConfirm: (items: List<FileItem>) -> Unit,
     onSetSafePin: (pin: String) -> Unit = {},
     onEnterSafePin: (pin: String) -> Unit = {},
+    onCompress: (items: List<FileItem>, zipName: String) -> Unit = { _, _ -> },
+    onSaveTextFile: (file: java.io.File, content: String) -> Unit = { _, _ -> },
+    onCalculateChecksum: (item: FileItem) -> Unit = {},
     currentSortOrder: SortOrder,
     onSelectSortOrder: (SortOrder) -> Unit
 ) {
@@ -146,10 +149,106 @@ fun AppDialogHost(
                         DetailRow("Ruta", item.path)
                         if (!item.isDirectory) {
                             DetailRow("MIME Type", FileUtils.getMimeType(item.file))
+
+                            Spacer(modifier = Modifier.height(4.dp))
+                            if (dialogType.md5 != null) {
+                                DetailRow("MD5", dialogType.md5)
+                                DetailRow("SHA-256", dialogType.sha256 ?: "")
+                            } else {
+                                OutlinedButton(
+                                    onClick = { onCalculateChecksum(item) },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("Calcular Checksum (MD5 / SHA-256)")
+                                }
+                            }
                         }
                     }
                 },
                 confirmButton = {
+                    TextButton(onClick = onDismiss) { Text("Cerrar") }
+                }
+            )
+        }
+
+        is DialogType.CompressZip -> {
+            val defaultName = if (dialogType.items.size == 1) {
+                "${dialogType.items.first().name.substringBeforeLast('.')}.zip"
+            } else {
+                "archivo_comprimido.zip"
+            }
+            var zipName by remember { mutableStateOf(defaultName) }
+            AlertDialog(
+                shape = RoundedCornerShape(28.dp),
+                onDismissRequest = onDismiss,
+                title = { Text("Comprimir a ZIP") },
+                text = {
+                    Column {
+                        Text("Se comprimirán ${dialogType.items.size} elemento(s).")
+                        Spacer(modifier = Modifier.height(10.dp))
+                        OutlinedTextField(
+                            value = zipName,
+                            onValueChange = { zipName = it },
+                            label = { Text("Nombre del archivo ZIP") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = { if (zipName.isNotBlank()) onCompress(dialogType.items, zipName) },
+                        enabled = zipName.isNotBlank()
+                    ) {
+                        Text("Comprimir")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = onDismiss) { Text("Cancelar") }
+                }
+            )
+        }
+
+        is DialogType.TextEditor -> {
+            var textContent by remember { mutableStateOf(dialogType.content) }
+            AlertDialog(
+                shape = RoundedCornerShape(20.dp),
+                onDismissRequest = onDismiss,
+                title = {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = dialogType.file.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 1,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "${textContent.length} car.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                text = {
+                    OutlinedTextField(
+                        value = textContent,
+                        onValueChange = { textContent = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(350.dp),
+                        textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+                    )
+                },
+                confirmButton = {
+                    Button(onClick = { onSaveTextFile(dialogType.file, textContent) }) {
+                        Text("Guardar")
+                    }
+                },
+                dismissButton = {
                     TextButton(onClick = onDismiss) { Text("Cerrar") }
                 }
             )

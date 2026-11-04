@@ -21,7 +21,13 @@ sealed interface DialogType {
     object CreateFolder : DialogType
     data class Rename(val item: FileItem) : DialogType
     data class DeleteConfirm(val items: List<FileItem>, val permanent: Boolean = false) : DialogType
-    data class FileDetails(val item: FileItem) : DialogType
+    data class FileDetails(
+        val item: FileItem,
+        val md5: String? = null,
+        val sha256: String? = null
+    ) : DialogType
+    data class CompressZip(val items: List<FileItem>) : DialogType
+    data class TextEditor(val file: File, val content: String) : DialogType
     object SortPicker : DialogType
     object SetSafePin : DialogType
     object EnterSafePin : DialogType
@@ -34,7 +40,8 @@ enum class ActiveScreen {
     EXPLORER_FOLDER,
     TRASH,
     SAFE_FOLDER,
-    FAVORITES
+    FAVORITES,
+    APP_MANAGER
 }
 
 data class ExplorerUiState(
@@ -62,6 +69,10 @@ data class ExplorerUiState(
     val safeFolderFiles: List<FileItem> = emptyList(),
     val isSafeFolderUnlocked: Boolean = false,
     val favoriteFiles: List<FileItem> = emptyList(),
+
+    // Gestor de Aplicaciones (App Manager)
+    val installedApps: List<com.example.explorer.domain.model.AppInfoItem> = emptyList(),
+    val isAppsLoading: Boolean = false,
 
     // Limpieza Inteligente
     val junkFilesCount: Int = 0,
@@ -107,6 +118,7 @@ class ExplorerViewModel(application: Application) : AndroidViewModel(application
             ActiveScreen.CLEAN -> loadCleanStats()
             ActiveScreen.TRASH -> loadTrashFiles()
             ActiveScreen.FAVORITES -> loadFavorites()
+            ActiveScreen.APP_MANAGER -> loadInstalledApps()
             ActiveScreen.SAFE_FOLDER -> {
                 if (!_uiState.value.isSafeFolderUnlocked) {
                     if (repository.isSafePinSet()) {
@@ -463,5 +475,106 @@ class ExplorerViewModel(application: Application) : AndroidViewModel(application
 
     fun dismissToast() {
         _uiState.update { it.copy(toastMessage = null) }
+    }
+
+    // --- Gestor de Aplicaciones ---
+    fun loadInstalledApps() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isAppsLoading = true) }
+            val apps = repository.getInstalledApps()
+            _uiState.update { it.copy(installedApps = apps, isAppsLoading = false) }
+        }
+    }
+
+    fun backupApp(app: com.example.explorer.domain.model.AppInfoItem) {
+        viewModelScope.launch {
+            val downloadDir = File(repository.rootPath, "Download")
+            val res = repository.backupAppApk(app, downloadDir)
+            if (res.isSuccess) {
+                _uiState.update { it.copy(toastMessage = "APK extraído en Descargas: ${res.getOrNull()?.name}") }
+            } else {
+                _uiState.update { it.copy(toastMessage = "Error al extraer: ${res.exceptionOrNull()?.message}") }
+            }
+        }
+    }
+
+    // --- Editor de Texto ---
+    fun openTextEditor(file: File) {
+        viewModelScope.launch {
+            val res = repository.readTextFile(file)
+            if (res.isSuccess) {
+                _uiState.update { it.copy(activeDialog = DialogType.TextEditor(file, res.getOrDefault(""))) }
+            } else {
+                _uiState.update { it.copy(toastMessage = res.exceptionOrNull()?.message ?: "Error al abrir texto") }
+            }
+        }
+    }
+
+    fun saveTextFile(file: File, content: String) {
+        viewModelScope.launch {
+            val res = repository.writeTextFile(file, content)
+            if (res.isSuccess) {
+                _uiState.update { it.copy(toastMessage = "Archivo guardado con éxito", activeDialog = null) }
+                loadFiles()
+            } else {
+                _uiState.update { it.copy(toastMessage = "Error al guardar: ${res.exceptionOrNull()?.message}") }
+            }
+        }
+    }
+
+    // --- Compresión y Descompresión ZIP ---
+    fun compressFiles(items: List<FileItem>, zipName: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, activeDialog = null) }
+            val cleanZipName = if (zipName.endsWith(".zip", ignoreCase = true)) zipName else "$zipName.zip"
+            val destZip = File(_uiState.value.currentPath, cleanZipName)
+            val res = repository.zipFiles(items, destZip)
+            if (res.isSuccess) {
+                _uiState.update {
+                    it.copy(
+                        toastMessage = "Archivo ZIP creado: ${res.getOrNull()?.name}",
+                        selectedFiles = emptySet()
+                    )
+                }
+            } else {
+                _uiState.update { it.copy(toastMessage = "Error al comprimir: ${res.exceptionOrNull()?.message}") }
+            }
+            loadFiles()
+        }
+    }
+
+    fun extractZip(zipFile: File) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            val folderName = zipFile.nameWithoutExtension
+            val targetDir = File(zipFile.parentFile ?: File(repository.rootPath), folderName)
+            val res = repository.extractZip(zipFile, targetDir)
+            if (res.isSuccess) {
+                _uiState.update { it.copy(toastMessage = "Extraídos ${res.getOrDefault(0)} archivos en /$folderName") }
+            } else {
+                _uiState.update { it.copy(toastMessage = "Error al extraer: ${res.exceptionOrNull()?.message}") }
+            }
+            loadFiles()
+        }
+    }
+
+    // --- Checksum (MD5 y SHA-256) ---
+    fun loadChecksums(item: FileItem) {
+        viewModelScope.launch {
+            val md5Res = repository.calculateChecksum(item.file, "MD5")
+            val sha256Res = repository.calculateChecksum(item.file, "SHA-256")
+            val currentDialog = _uiState.value.activeDialog
+            if (currentDialog is DialogType.FileDetails && currentDialog.item.path == item.path) {
+                _uiState.update {
+                    it.copy(
+                        activeDialog = DialogType.FileDetails(
+                            item = item,
+                            md5 = md5Res.getOrNull() ?: "Error",
+                            sha256 = sha256Res.getOrNull() ?: "Error"
+                        )
+                    )
+                }
+            }
+        }
     }
 }

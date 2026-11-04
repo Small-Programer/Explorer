@@ -18,6 +18,7 @@ fun ContextualBottomBar(
     selectedCount: Int,
     onCopy: () -> Unit,
     onCut: () -> Unit,
+    onCompress: () -> Unit,
     onDelete: () -> Unit,
     onShare: () -> Unit,
     onSelectAll: () -> Unit,
@@ -31,12 +32,13 @@ fun ContextualBottomBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+                .padding(horizontal = 4.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
             ActionItem(icon = Icons.Default.ContentCopy, label = "Copiar", onClick = onCopy)
             ActionItem(icon = Icons.Default.ContentCut, label = "Mover", onClick = onCut)
+            ActionItem(icon = Icons.Default.FolderZip, label = "Comprimir", onClick = onCompress)
             ActionItem(icon = Icons.Default.Share, label = "Compartir", onClick = onShare)
             ActionItem(icon = Icons.Default.SelectAll, label = "Todos", onClick = onSelectAll)
             ActionItem(

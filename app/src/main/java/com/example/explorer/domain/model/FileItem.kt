@@ -30,6 +30,20 @@ data class FileItem(
             }
         }
 
+    val isTextFile: Boolean
+        get() {
+            if (isDirectory) return false
+            return when (extension) {
+                "txt", "json", "xml", "md", "csv", "log", "kt", "java", "py",
+                "html", "css", "js", "ts", "properties", "gradle", "yaml",
+                "yml", "ini", "conf", "sh", "bat", "c", "cpp", "h", "sql" -> true
+                else -> false
+            }
+        }
+
+    val isZipArchive: Boolean
+        get() = !isDirectory && extension == "zip"
+
     val formattedSize: String
         get() {
             if (isDirectory) {

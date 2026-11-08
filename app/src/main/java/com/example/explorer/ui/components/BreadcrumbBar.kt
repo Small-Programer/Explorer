@@ -3,6 +3,7 @@ package com.example.explorer.ui.components
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Home
@@ -11,7 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun BreadcrumbBar(
@@ -29,7 +32,7 @@ fun BreadcrumbBar(
         modifier = modifier
             .fillMaxWidth()
             .horizontalScroll(scrollState)
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(horizontal = 14.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         breadcrumbs.forEachIndexed { index, pair ->
@@ -41,14 +44,31 @@ fun BreadcrumbBar(
                 label = {
                     Text(
                         text = name,
-                        style = if (isLast) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = if (isLast) FontWeight.Bold else FontWeight.Medium,
+                            fontSize = 13.sp
+                        ),
+                        color = if (isLast) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                     )
                 },
                 icon = if (index == 0) {
-                    { Icon(Icons.Default.Home, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                    {
+                        Icon(
+                            imageVector = Icons.Default.Home,
+                            contentDescription = null,
+                            tint = if (isLast) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 } else null,
+                shape = RoundedCornerShape(12.dp),
+                border = null,
                 colors = SuggestionChipDefaults.suggestionChipColors(
-                    containerColor = if (isLast) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
+                    containerColor = if (isLast) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    }
                 )
             )
 
@@ -56,8 +76,10 @@ fun BreadcrumbBar(
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(18.dp).padding(horizontal = 2.dp)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier
+                        .size(16.dp)
+                        .padding(horizontal = 2.dp)
                 )
             }
         }

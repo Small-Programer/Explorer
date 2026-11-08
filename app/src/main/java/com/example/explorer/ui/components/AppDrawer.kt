@@ -13,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -39,7 +38,8 @@ fun AppDrawerContent(
     onCloseDrawer: () -> Unit
 ) {
     ModalDrawerSheet(
-        modifier = Modifier.width(310.dp)
+        modifier = Modifier.width(320.dp),
+        drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp)
     ) {
         Column(
             modifier = Modifier
@@ -50,30 +50,23 @@ fun AppDrawerContent(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0xFF1976D2),
-                                Color(0xFF1565C0)
-                            )
-                        )
-                    )
-                    .padding(horizontal = 20.dp, vertical = 24.dp)
+                    .background(DrawerHeaderGradient)
+                    .padding(horizontal = 20.dp, vertical = 26.dp)
             ) {
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
-                                .size(48.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color.White.copy(alpha = 0.2f)),
+                                .size(50.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(Color.White.copy(alpha = 0.22f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Folder,
                                 contentDescription = null,
                                 tint = Color(0xFFFFD54F),
-                                modifier = Modifier.size(30.dp)
+                                modifier = Modifier.size(32.dp)
                             )
                         }
 
@@ -84,26 +77,46 @@ fun AppDrawerContent(
                                 text = "Explorer",
                                 style = MaterialTheme.typography.titleLarge.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    color = Color.White,
+                                    fontSize = 22.sp
                                 )
                             )
                             Text(
-                                text = "Gestor de Archivos",
+                                text = "Gestor de Archivos Pro",
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    color = Color.White.copy(alpha = 0.8f)
+                                    color = Color.White.copy(alpha = 0.85f),
+                                    fontWeight = FontWeight.Medium
                                 )
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     // Indicador de almacenamiento rápido en el header
-                    Text(
-                        text = "Almacenamiento: ${storageInfo?.formattedUsed ?: "0 B"} / ${storageInfo?.formattedTotal ?: "0 B"}",
-                        style = MaterialTheme.typography.bodySmall.copy(color = Color.White.copy(alpha = 0.9f))
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Almacenamiento: ${storageInfo?.formattedUsed ?: "0 B"} / ${storageInfo?.formattedTotal ?: "0 B"}",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = Color.White.copy(alpha = 0.95f),
+                                fontWeight = FontWeight.Medium
+                            )
+                        )
+                        Text(
+                            text = "${((storageInfo?.usedPercentage ?: 0f) * 100).toInt()}%",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                color = Color(0xFFFFD54F),
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     LinearProgressIndicator(
                         progress = { storageInfo?.usedPercentage ?: 0f },
                         modifier = Modifier
@@ -111,15 +124,15 @@ fun AppDrawerContent(
                             .height(6.dp)
                             .clip(RoundedCornerShape(3.dp)),
                         color = Color(0xFFFFD54F),
-                        trackColor = Color.White.copy(alpha = 0.3f)
+                        trackColor = Color.White.copy(alpha = 0.35f)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // SECCIÓN LOCAL
-            DrawerSectionTitle("LOCAL")
+            DrawerSectionTitle("ESPACIO LOCAL")
             DrawerItem(
                 label = "Inicio",
                 icon = Icons.Default.Home,
@@ -139,10 +152,13 @@ fun AppDrawerContent(
                 }
             )
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp))
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 10.dp, horizontal = 16.dp),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)
+            )
 
             // SECCIÓN BIBLIOTECA
-            DrawerSectionTitle("BIBLIOTECA")
+            DrawerSectionTitle("CATEGORÍAS")
             DrawerItem(
                 label = "Imágenes",
                 icon = Icons.Default.Image,
@@ -190,7 +206,7 @@ fun AppDrawerContent(
                 }
             )
             DrawerItem(
-                label = "Archivos comprimidos",
+                label = "Archivos comprimidos (ZIP)",
                 icon = Icons.Default.FolderZip,
                 iconTint = CategoryArchive,
                 onClick = {
@@ -199,13 +215,17 @@ fun AppDrawerContent(
                 }
             )
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp))
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 10.dp, horizontal = 16.dp),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)
+            )
 
             // SECCIÓN HERRAMIENTAS
-            DrawerSectionTitle("HERRAMIENTAS")
+            DrawerSectionTitle("HERRAMIENTAS Y SEGURIDAD")
             DrawerItem(
                 label = "Papelera de reciclaje",
                 icon = Icons.Default.Delete,
+                iconTint = CategoryTrash,
                 selected = currentScreen == ActiveScreen.TRASH,
                 onClick = {
                     onNavigateTrash()
@@ -215,6 +235,7 @@ fun AppDrawerContent(
             DrawerItem(
                 label = "Carpeta segura",
                 icon = Icons.Default.Lock,
+                iconTint = CategorySafe,
                 selected = currentScreen == ActiveScreen.SAFE_FOLDER,
                 onClick = {
                     onNavigateSafeFolder()
@@ -224,6 +245,7 @@ fun AppDrawerContent(
             DrawerItem(
                 label = "Favoritos",
                 icon = Icons.Default.Star,
+                iconTint = CategoryFolder,
                 selected = currentScreen == ActiveScreen.FAVORITES,
                 onClick = {
                     onNavigateFavorites()
@@ -231,8 +253,9 @@ fun AppDrawerContent(
                 }
             )
             DrawerItem(
-                label = "Analizador y Limpieza",
+                label = "Analizador de espacio",
                 icon = Icons.Default.CleaningServices,
+                iconTint = PrimaryBlue,
                 selected = currentScreen == ActiveScreen.CLEAN,
                 onClick = {
                     onNavigateClean()
@@ -240,7 +263,7 @@ fun AppDrawerContent(
                 }
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
         }
     }
 }
@@ -252,7 +275,7 @@ fun DrawerSectionTitle(title: String) {
         style = MaterialTheme.typography.labelSmall.copy(
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary,
-            letterSpacing = 1.sp
+            letterSpacing = 0.8.sp
         ),
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
     )
@@ -267,11 +290,33 @@ fun DrawerItem(
     onClick: () -> Unit
 ) {
     NavigationDrawerItem(
-        label = { Text(label, style = MaterialTheme.typography.bodyMedium) },
-        icon = { Icon(imageVector = icon, contentDescription = null, tint = iconTint) },
+        label = {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+                )
+            )
+        },
+        icon = {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(if (selected) Color.Transparent else iconTint.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = if (selected) MaterialTheme.colorScheme.primary else iconTint,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        },
         selected = selected,
         onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 2.dp)

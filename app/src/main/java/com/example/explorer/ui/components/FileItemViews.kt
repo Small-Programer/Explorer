@@ -1,5 +1,6 @@
 package com.example.explorer.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -40,7 +41,7 @@ fun FileListItem(
     modifier: Modifier = Modifier
 ) {
     val backgroundColor = if (isSelected) {
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f)
     } else {
         Color.Transparent
     }
@@ -48,37 +49,61 @@ fun FileListItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
             .background(backgroundColor)
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
             )
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 14.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (isSelectionMode) {
             Checkbox(
                 checked = isSelected,
                 onCheckedChange = { onClick() },
-                modifier = Modifier.padding(end = 10.dp)
+                modifier = Modifier.padding(end = 8.dp)
             )
         }
 
-        FileIconThumbnail(item = item, size = 48.dp)
+        FileIconThumbnail(item = item, size = 46.dp)
 
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(14.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = item.name,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 15.sp
-                ),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = item.name,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 15.sp
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+
+                if (item.extension.isNotBlank() && !item.isDirectory) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+                    ) {
+                        Text(
+                            text = item.extension.uppercase(),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(2.dp))
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = item.formattedSize,
@@ -86,9 +111,9 @@ fun FileListItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = " • ",
+                    text = "  •  ",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 )
                 Text(
                     text = item.formattedDate,
@@ -124,20 +149,24 @@ fun FileGridItem(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(0.88f)
+            .aspectRatio(0.86f)
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
             ),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected) {
-                MaterialTheme.colorScheme.primaryContainer
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
             } else {
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                MaterialTheme.colorScheme.surface
             }
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 2.dp else 0.dp)
+        border = BorderStroke(
+            width = if (isSelected) 1.5.dp else 1.dp,
+            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 2.dp else 0.5.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -147,7 +176,7 @@ fun FileGridItem(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                FileIconThumbnail(item = item, size = 64.dp)
+                FileIconThumbnail(item = item, size = 58.dp)
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
                     text = item.name,
@@ -189,20 +218,20 @@ fun RecentMediaCard(
     Card(
         modifier = modifier
             .width(140.dp)
-            .height(150.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .height(154.dp)
+            .clip(RoundedCornerShape(18.dp))
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(95.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                    .height(98.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                 contentAlignment = Alignment.Center
             ) {
                 if (item.category == FileCategory.IMAGE && item.file.exists()) {
@@ -214,27 +243,36 @@ fun RecentMediaCard(
                     )
                 } else {
                     val (icon, tint) = getCategoryIconAndColor(item)
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = tint,
-                        modifier = Modifier.size(36.dp)
-                    )
+                    val containerColor = getCategoryContainerColor(item)
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(containerColor),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = tint,
+                            modifier = Modifier.size(30.dp)
+                        )
+                    }
                 }
 
                 if (item.category == FileCategory.VIDEO) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(34.dp)
                             .clip(CircleShape)
-                            .background(Color.Black.copy(alpha = 0.6f)),
+                            .background(Color.Black.copy(alpha = 0.65f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.PlayArrow,
                             contentDescription = null,
                             tint = Color.White,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
@@ -243,19 +281,20 @@ fun RecentMediaCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 6.dp)
+                    .padding(horizontal = 10.dp, vertical = 7.dp)
             ) {
                 Text(
                     text = item.name,
-                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = item.formattedSize,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 10.sp
+                    fontSize = 11.sp
                 )
             }
         }
@@ -270,11 +309,11 @@ fun FileIconThumbnail(item: FileItem, size: androidx.compose.ui.unit.Dp) {
             contentDescription = item.name,
             modifier = Modifier
                 .size(size)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(14.dp))
                 .border(
                     width = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                    shape = RoundedCornerShape(12.dp)
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                    shape = RoundedCornerShape(14.dp)
                 ),
             contentScale = ContentScale.Crop
         )
@@ -285,7 +324,7 @@ fun FileIconThumbnail(item: FileItem, size: androidx.compose.ui.unit.Dp) {
         Box(
             modifier = Modifier
                 .size(size)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(14.dp))
                 .background(containerColor),
             contentAlignment = Alignment.Center
         ) {
@@ -293,7 +332,7 @@ fun FileIconThumbnail(item: FileItem, size: androidx.compose.ui.unit.Dp) {
                 imageVector = icon,
                 contentDescription = null,
                 tint = tint,
-                modifier = Modifier.size(size * 0.55f)
+                modifier = Modifier.size(size * 0.56f)
             )
         }
     }
@@ -310,7 +349,7 @@ fun getCategoryIconAndColor(item: FileItem): Pair<ImageVector, Color> {
         FileCategory.DOCUMENT -> Pair(Icons.Default.Description, CategoryDocument)
         FileCategory.ARCHIVE -> Pair(Icons.Default.FolderZip, CategoryArchive)
         FileCategory.APK -> Pair(Icons.Default.Android, CategoryApk)
-        else -> Pair(Icons.AutoMirrored.Filled.InsertDriveFile, Color.Gray)
+        else -> Pair(Icons.AutoMirrored.Filled.InsertDriveFile, Color(0xFF5F6368))
     }
 }
 
@@ -325,6 +364,6 @@ fun getCategoryContainerColor(item: FileItem): Color {
         FileCategory.DOCUMENT -> CategoryDocumentContainer
         FileCategory.ARCHIVE -> CategoryArchiveContainer
         FileCategory.APK -> CategoryApkContainer
-        else -> Color(0xFFEEEEEE)
+        else -> Color(0xFFF1F3F4)
     }
 }

@@ -1,6 +1,7 @@
 package com.example.explorer.ui.screens
 
 import android.os.Environment
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -19,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -31,9 +33,7 @@ import com.example.explorer.domain.model.StorageInfo
 import com.example.explorer.ui.components.FileListItem
 import com.example.explorer.ui.components.RecentMediaCard
 import com.example.explorer.ui.theme.*
-import java.io.File
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     storageInfo: StorageInfo?,
@@ -60,78 +60,53 @@ fun HomeScreen(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Barra Superior Estilo Clásico EX File Explorer con Menú Hamburguesa
+        // 1. Barra de Búsqueda Integrada estilo Google Files / Material You Moderno
         item {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(34.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xFF1976D2)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Folder,
-                                contentDescription = null,
-                                tint = Color(0xFFFFD54F),
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = "Explorer",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onMenuClick) {
-                        Icon(Icons.Default.Menu, contentDescription = "Menú")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onSearchClick) {
-                        Icon(Icons.Default.Search, contentDescription = "Buscar")
-                    }
-                    IconButton(onClick = onOpenStorageClick) {
-                        Icon(Icons.Default.CleaningServices, contentDescription = "Analizar")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+            Spacer(modifier = Modifier.height(6.dp))
+            ModernSearchBarHeader(
+                onMenuClick = onMenuClick,
+                onSearchClick = onSearchClick,
+                onCleanClick = onOpenStorageClick
             )
         }
 
-        // 1. Barra de Búsqueda
+        // 2. Tarjeta Principal de Almacenamiento con diseño moderno
         item {
-            GoogleFilesSearchBar(onClick = onSearchClick)
-        }
-
-        // 2. Tarjeta Principal de Almacenamiento
-        item {
-            StorageBannerCard(
+            ModernStorageCard(
                 storageInfo = storageInfo,
                 onAnalyzeClick = onOpenStorageClick
             )
         }
 
-        // 3. Accesos directos a carpetas populares (Descargas, Fotos, Documentos)
+        // 3. Accesos directos a carpetas rápidas
         item {
             ShortcutsRow(onShortcutClick = onShortcutClick)
         }
 
-        // 4. Categorías Principales (Cuadrícula 4x2 icónica de EX File Explorer)
+        // 4. Categorías Principales (Cuadrícula 4x2 estilo EX File Explorer)
         item {
-            Text(
-                text = "Biblioteca",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 18.sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Biblioteca",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "8 categorías",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                )
+            }
+
             Spacer(modifier = Modifier.height(10.dp))
+
             ExCategoriesGrid(
                 onCategoryClick = onCategoryClick,
                 onAppsClick = onAppsClick,
@@ -140,52 +115,69 @@ fun HomeScreen(
             )
         }
 
-        // 5. Colecciones (Favoritos, Carpeta Segura, Papelera)
+        // 5. Colecciones Especiales (Favoritos, Carpeta Segura, Papelera, Apps)
         item {
             Text(
                 text = "Colecciones",
                 style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 ),
                 color = MaterialTheme.colorScheme.onSurface
             )
+
             Spacer(modifier = Modifier.height(10.dp))
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                shape = RoundedCornerShape(22.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
                 Column {
                     CollectionRowItem(
                         icon = Icons.Default.Star,
                         title = "Favoritos",
-                        subtitle = "Archivos destacados",
+                        subtitle = "Archivos y accesos destacados",
                         tint = CategoryFolder,
+                        containerTint = CategoryFolderContainer,
                         onClick = onFavoritesClick
                     )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                    )
                     CollectionRowItem(
                         icon = Icons.Default.Lock,
                         title = "Carpeta segura",
-                        subtitle = "Protegida con PIN",
-                        tint = MaterialTheme.colorScheme.primary,
+                        subtitle = "Protegida con clave PIN local",
+                        tint = CategorySafe,
+                        containerTint = CategorySafeContainer,
                         onClick = onSafeFolderClick
                     )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                    )
                     CollectionRowItem(
                         icon = Icons.Default.Delete,
                         title = "Papelera",
-                        subtitle = "Archivos eliminados recientemente",
-                        tint = MaterialTheme.colorScheme.error,
+                        subtitle = "Recupera o elimina archivos borrados",
+                        tint = CategoryTrash,
+                        containerTint = CategoryTrashContainer,
                         onClick = onTrashClick
                     )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                    )
                     CollectionRowItem(
                         icon = Icons.Default.Apps,
                         title = "Gestor de aplicaciones",
-                        subtitle = "Ver apps y extraer APKs de backup",
+                        subtitle = "Ver instaladas y hacer backup APK",
                         tint = CategoryApk,
+                        containerTint = CategoryApkContainer,
                         onClick = onAppsClick
                     )
                 }
@@ -197,18 +189,22 @@ fun HomeScreen(
             Text(
                 text = "Dispositivos de almacenamiento",
                 style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 ),
                 color = MaterialTheme.colorScheme.onSurface
             )
+
             Spacer(modifier = Modifier.height(10.dp))
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable(onClick = onInternalStorageClick),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                shape = RoundedCornerShape(22.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -218,9 +214,9 @@ fun HomeScreen(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(46.dp)
+                            .size(48.dp)
                             .clip(RoundedCornerShape(14.dp))
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                            .background(MaterialTheme.colorScheme.primaryContainer),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -236,6 +232,7 @@ fun HomeScreen(
                             text = "Almacenamiento interno",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "${storageInfo?.formattedFree ?: "0 B"} libres de ${storageInfo?.formattedTotal ?: "0 B"}",
                             style = MaterialTheme.typography.bodySmall,
@@ -245,7 +242,7 @@ fun HomeScreen(
                     Icon(
                         imageVector = Icons.Default.ChevronRight,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
                 }
             }
@@ -261,7 +258,7 @@ fun HomeScreen(
                 Text(
                     text = "Archivos Recientes",
                     style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
                     ),
                     color = MaterialTheme.colorScheme.onSurface
@@ -273,15 +270,30 @@ fun HomeScreen(
             if (recentFiles.isEmpty()) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
                 ) {
-                    Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = "No hay archivos recientes aún",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Default.AccessTime,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                modifier = Modifier.size(32.dp)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "No hay archivos recientes aún",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             } else {
@@ -299,7 +311,7 @@ fun HomeScreen(
             }
         }
 
-        // 6. Lista vertical complementaria de recientes
+        // 8. Lista complementaria de más recientes
         if (recentFiles.size > 8) {
             item {
                 Text(
@@ -313,7 +325,8 @@ fun HomeScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
                 ) {
                     FileListItem(
                         item = item,
@@ -328,67 +341,93 @@ fun HomeScreen(
         }
 
         item {
-            Spacer(modifier = Modifier.height(80.dp)) // Padding para BottomBar
+            Spacer(modifier = Modifier.height(80.dp))
         }
     }
 }
 
 /**
- * Barra superior de búsqueda tipo píldora de Google
+ * Barra de Búsqueda Integrada estilo Google Files / Pixel Capsule Header
  */
 @Composable
-fun GoogleFilesSearchBar(onClick: () -> Unit) {
+fun ModernSearchBarHeader(
+    onMenuClick: () -> Unit,
+    onSearchClick: () -> Unit,
+    onCleanClick: () -> Unit
+) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp)
-            .clip(RoundedCornerShape(26.dp))
-            .clickable(onClick = onClick),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-        tonalElevation = 2.dp
+            .height(56.dp)
+            .shadow(elevation = 2.dp, shape = RoundedCornerShape(28.dp)),
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(22.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = "Buscar en tus archivos...",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                modifier = Modifier.weight(1f)
-            )
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
+            IconButton(onClick = onMenuClick) {
                 Icon(
-                    imageVector = Icons.Default.Folder,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp)
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = "Menú lateral",
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
+            }
+
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .clickable(onClick = onSearchClick)
+                    .padding(horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Buscar en tus archivos...",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            IconButton(onClick = onSearchClick) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Buscar",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            IconButton(onClick = onCleanClick) {
+                Box(
+                    modifier = Modifier
+                        .size(34.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CleaningServices,
+                        contentDescription = "Analizar almacenamiento",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
         }
     }
 }
 
 /**
- * Tarjeta de almacenamiento con diseño premium
+ * Tarjeta de almacenamiento con diseño moderno, barra de progreso limpia y detalles
  */
 @Composable
-fun StorageBannerCard(
+fun ModernStorageCard(
     storageInfo: StorageInfo?,
     onAnalyzeClick: () -> Unit
 ) {
@@ -397,10 +436,9 @@ fun StorageBannerCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
@@ -411,9 +449,9 @@ fun StorageBannerCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(42.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                            .size(46.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -423,17 +461,16 @@ fun StorageBannerCard(
                             modifier = Modifier.size(24.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(14.dp))
                     Column {
                         Text(
                             text = "Almacenamiento interno",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                         )
                         Text(
-                            text = "${storageInfo?.formattedFree ?: "0 B"} disponibles",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Medium
+                            text = "${storageInfo?.formattedFree ?: "0 B"} libres",
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -446,7 +483,7 @@ fun StorageBannerCard(
                         text = "$usedPercent%",
                         style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                     )
                 }
             }
@@ -477,13 +514,21 @@ fun StorageBannerCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                TextButton(
+                FilledTonalButton(
                     onClick = onAnalyzeClick,
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                 ) {
-                    Text("Analizar espacio")
+                    Text(
+                        text = "Liberar espacio",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
+                    )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Icon(Icons.Default.ChevronRight, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
         }
@@ -513,7 +558,7 @@ fun ShortcutsRow(onShortcutClick: (path: String) -> Unit) {
             FilterChip(
                 selected = false,
                 onClick = { onShortcutClick(path) },
-                label = { Text(name) },
+                label = { Text(name, fontWeight = FontWeight.Medium) },
                 leadingIcon = {
                     Icon(
                         imageVector = when (name) {
@@ -526,14 +571,14 @@ fun ShortcutsRow(onShortcutClick: (path: String) -> Unit) {
                         modifier = Modifier.size(16.dp)
                     )
                 },
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(14.dp)
             )
         }
     }
 }
 
 /**
- * Cuadrícula clásica de 8 categorías al estilo EX / ES File Explorer (4x2)
+ * Cuadrícula de 8 categorías al estilo EX / ES File Explorer (4x2)
  */
 @Composable
 fun ExCategoriesGrid(
@@ -557,15 +602,15 @@ fun ExCategoriesGrid(
         CategoryItemDef("Documentos", Icons.Default.Description, CategoryDocument, CategoryDocumentContainer) { onCategoryClick(FileCategory.DOCUMENT) },
         CategoryItemDef("Apps", Icons.Default.Apps, CategoryApk, CategoryApkContainer, onAppsClick),
         CategoryItemDef("Comprimidos", Icons.Default.FolderZip, CategoryArchive, CategoryArchiveContainer) { onCategoryClick(FileCategory.ARCHIVE) },
-        CategoryItemDef("Descargas", Icons.Default.Download, Color(0xFF0288D1), Color(0xFFE1F5FE), onDownloadsClick),
-        CategoryItemDef("Papelera", Icons.Default.Delete, Color(0xFFE53935), Color(0xFFFFEBEE), onTrashClick)
+        CategoryItemDef("Descargas", Icons.Default.Download, CategoryDownloads, CategoryDownloadsContainer, onDownloadsClick),
+        CategoryItemDef("Papelera", Icons.Default.Delete, CategoryTrash, CategoryTrashContainer, onTrashClick)
     )
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         for (row in 0 until 2) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 for (col in 0 until 4) {
                     val index = row * 4 + col
@@ -595,31 +640,32 @@ fun ExCategoryCard(
 ) {
     Card(
         modifier = modifier
-            .aspectRatio(0.9f)
-            .clip(RoundedCornerShape(16.dp))
+            .aspectRatio(0.92f)
+            .clip(RoundedCornerShape(18.dp))
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = containerColor)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        border = BorderStroke(0.5.dp, tintColor.copy(alpha = 0.2f))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(6.dp),
+                .padding(8.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
                 modifier = Modifier
-                    .size(38.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.85f)),
+                    .background(Color.White.copy(alpha = 0.9f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = title,
                     tint = tintColor,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(22.dp)
                 )
             }
             Spacer(modifier = Modifier.height(6.dp))
@@ -627,9 +673,9 @@ fun ExCategoryCard(
                 text = title,
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 11.sp
+                    fontSize = 11.5.sp
                 ),
-                color = Color.Black.copy(alpha = 0.85f),
+                color = Color(0xFF1E2025),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -643,20 +689,21 @@ fun CollectionRowItem(
     title: String,
     subtitle: String,
     tint: Color,
+    containerTint: Color = tint.copy(alpha = 0.12f),
     onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(tint.copy(alpha = 0.12f)),
+                .size(42.dp)
+                .clip(RoundedCornerShape(13.dp))
+                .background(containerTint),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -672,6 +719,7 @@ fun CollectionRowItem(
                 text = title,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
             )
+            Spacer(modifier = Modifier.height(1.dp))
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
@@ -681,8 +729,7 @@ fun CollectionRowItem(
         Icon(
             imageVector = Icons.Default.ChevronRight,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
         )
     }
 }
-

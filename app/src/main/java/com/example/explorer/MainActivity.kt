@@ -120,6 +120,8 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
             AppDrawerContent(
                 currentScreen = uiState.activeScreen,
                 storageInfo = uiState.storageInfo,
+                showHidden = uiState.showHidden,
+                onToggleShowHidden = { viewModel.toggleShowHidden() },
                 onNavigateHome = {
                     selectedTab = 1
                     viewModel.setScreen(ActiveScreen.BROWSE)

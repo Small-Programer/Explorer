@@ -4,23 +4,19 @@ import android.os.Environment
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -60,195 +56,40 @@ fun HomeScreen(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 1. Barra de Búsqueda Integrada estilo Google Files / Material You Moderno
+        // 1. Barra Superior estilo EX Original con pestaña "Hogar"
         item {
-            Spacer(modifier = Modifier.height(6.dp))
-            ModernSearchBarHeader(
+            Spacer(modifier = Modifier.height(4.dp))
+            ExOriginalTopBar(
                 onMenuClick = onMenuClick,
                 onSearchClick = onSearchClick,
                 onCleanClick = onOpenStorageClick
             )
         }
 
-        // 2. Tarjeta Principal de Almacenamiento con diseño moderno
+        // 2. Tarjetas Duales Superiores (Internal Storage + Analizador de archivos)
         item {
-            ModernStorageCard(
+            ExDualStorageCards(
                 storageInfo = storageInfo,
+                onStorageClick = onInternalStorageClick,
                 onAnalyzeClick = onOpenStorageClick
             )
         }
 
-        // 3. Accesos directos a carpetas rápidas
+        // 3. Cuadrícula Icónica de 12 Categorías (Estilo EX File Explorer con Squircles Sólidos)
         item {
-            ShortcutsRow(onShortcutClick = onShortcutClick)
-        }
-
-        // 4. Categorías Principales (Cuadrícula 4x2 estilo EX File Explorer)
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Biblioteca",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "8 categorías",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            ExCategoriesGrid(
+            ExIconsCategoryGrid(
                 onCategoryClick = onCategoryClick,
                 onAppsClick = onAppsClick,
                 onDownloadsClick = { onShortcutClick("$rootPath/Download") },
-                onTrashClick = onTrashClick
+                onCleanClick = onOpenStorageClick,
+                onSafeClick = onSafeFolderClick,
+                onFavoritesClick = onFavoritesClick,
+                onTrashClick = onTrashClick,
+                onStorageClick = onInternalStorageClick
             )
         }
 
-        // 5. Colecciones Especiales (Favoritos, Carpeta Segura, Papelera, Apps)
-        item {
-            Text(
-                text = "Colecciones",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(22.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-            ) {
-                Column {
-                    CollectionRowItem(
-                        icon = Icons.Default.Star,
-                        title = "Favoritos",
-                        subtitle = "Archivos y accesos destacados",
-                        tint = CategoryFolder,
-                        containerTint = CategoryFolderContainer,
-                        onClick = onFavoritesClick
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
-                    )
-                    CollectionRowItem(
-                        icon = Icons.Default.Lock,
-                        title = "Carpeta segura",
-                        subtitle = "Protegida con clave PIN local",
-                        tint = CategorySafe,
-                        containerTint = CategorySafeContainer,
-                        onClick = onSafeFolderClick
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
-                    )
-                    CollectionRowItem(
-                        icon = Icons.Default.Delete,
-                        title = "Papelera",
-                        subtitle = "Recupera o elimina archivos borrados",
-                        tint = CategoryTrash,
-                        containerTint = CategoryTrashContainer,
-                        onClick = onTrashClick
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
-                    )
-                    CollectionRowItem(
-                        icon = Icons.Default.Apps,
-                        title = "Gestor de aplicaciones",
-                        subtitle = "Ver instaladas y hacer backup APK",
-                        tint = CategoryApk,
-                        containerTint = CategoryApkContainer,
-                        onClick = onAppsClick
-                    )
-                }
-            }
-        }
-
-        // 6. Dispositivos de almacenamiento
-        item {
-            Text(
-                text = "Dispositivos de almacenamiento",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = onInternalStorageClick),
-                shape = RoundedCornerShape(22.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PhoneAndroid,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(26.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(14.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Almacenamiento interno",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "${storageInfo?.formattedFree ?: "0 B"} libres de ${storageInfo?.formattedTotal ?: "0 B"}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Icon(
-                        imageVector = Icons.Default.ChevronRight,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                    )
-                }
-            }
-        }
-
-        // 7. Archivos Recientes (Carrusel Horizontal)
+        // 4. Archivos Recientes (Carrusel Horizontal)
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -259,13 +100,13 @@ fun HomeScreen(
                     text = "Archivos Recientes",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
+                        fontSize = 17.sp
                     ),
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             if (recentFiles.isEmpty()) {
                 Card(
@@ -277,7 +118,7 @@ fun HomeScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(24.dp),
+                            .padding(22.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -285,7 +126,7 @@ fun HomeScreen(
                                 imageVector = Icons.Default.AccessTime,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                                modifier = Modifier.size(32.dp)
+                                modifier = Modifier.size(28.dp)
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
@@ -311,7 +152,7 @@ fun HomeScreen(
             }
         }
 
-        // 8. Lista complementaria de más recientes
+        // 5. Lista vertical complementaria si hay más recientes
         if (recentFiles.size > 8) {
             item {
                 Text(
@@ -347,280 +188,305 @@ fun HomeScreen(
 }
 
 /**
- * Barra de Búsqueda Integrada estilo Google Files / Pixel Capsule Header
+ * Barra Superior estilo EX Original con pestaña "Hogar"
  */
 @Composable
-fun ModernSearchBarHeader(
+fun ExOriginalTopBar(
     onMenuClick: () -> Unit,
     onSearchClick: () -> Unit,
     onCleanClick: () -> Unit
 ) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .shadow(elevation = 2.dp, shape = RoundedCornerShape(28.dp)),
-        shape = RoundedCornerShape(28.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onMenuClick) {
-                Icon(
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = "Menú lateral",
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .clickable(onClick = onSearchClick)
-                    .padding(horizontal = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Buscar en tus archivos...",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            IconButton(onClick = onSearchClick) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Buscar",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            IconButton(onClick = onCleanClick) {
-                Box(
-                    modifier = Modifier
-                        .size(34.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CleaningServices,
-                        contentDescription = "Analizar almacenamiento",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
- * Tarjeta de almacenamiento con diseño moderno, barra de progreso limpia y detalles
- */
-@Composable
-fun ModernStorageCard(
-    storageInfo: StorageInfo?,
-    onAnalyzeClick: () -> Unit
-) {
-    val usedPercent = ((storageInfo?.usedPercentage ?: 0f) * 100).toInt()
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(46.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.SdStorage,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(14.dp))
-                    Column {
-                        Text(
-                            text = "Almacenamiento interno",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                        )
-                        Text(
-                            text = "${storageInfo?.formattedFree ?: "0 B"} libres",
-                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer
-                ) {
-                    Text(
-                        text = "$usedPercent%",
-                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Barra de progreso estilizada
-            LinearProgressIndicator(
-                progress = { storageInfo?.usedPercentage ?: 0f },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(10.dp)
-                    .clip(RoundedCornerShape(5.dp)),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "${storageInfo?.formattedUsed ?: "0 B"} de ${storageInfo?.formattedTotal ?: "0 B"}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                FilledTonalButton(
-                    onClick = onAnalyzeClick,
-                    shape = RoundedCornerShape(12.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        text = "Liberar espacio",
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        imageVector = Icons.Default.ChevronRight,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
- * Fila de accesos directos rápidos a carpetas clave
- */
-@Composable
-fun ShortcutsRow(onShortcutClick: (path: String) -> Unit) {
-    val root = Environment.getExternalStorageDirectory().absolutePath
-    val shortcuts = listOf(
-        Pair("Descargas", "$root/Download"),
-        Pair("Cámara", "$root/DCIM/Camera"),
-        Pair("Documentos", "$root/Documents"),
-        Pair("Fotos", "$root/Pictures")
-    )
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .height(52.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        shortcuts.forEach { (name, path) ->
-            FilterChip(
-                selected = false,
-                onClick = { onShortcutClick(path) },
-                label = { Text(name, fontWeight = FontWeight.Medium) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = when (name) {
-                            "Descargas" -> Icons.Default.Download
-                            "Cámara" -> Icons.Default.PhotoCamera
-                            "Documentos" -> Icons.AutoMirrored.Filled.Article
-                            else -> Icons.Default.Image
-                        },
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
+        IconButton(onClick = onMenuClick) {
+            Icon(
+                imageVector = Icons.Default.Menu,
+                contentDescription = "Menú lateral",
+                tint = MaterialTheme.colorScheme.onSurface
+            )
+        }
+
+        Spacer(modifier = Modifier.width(4.dp))
+
+        // Pestaña "Hogar" redondeada estilo EX
+        Surface(
+            shape = RoundedCornerShape(18.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+            modifier = Modifier.height(36.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Home,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(17.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "Hogar",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.5.sp
                     )
-                },
-                shape = RoundedCornerShape(14.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Acciones: Corona PRO, Buscar, Opciones
+        IconButton(onClick = onCleanClick) {
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = "PRO",
+                tint = Color(0xFFFFB300),
+                modifier = Modifier.size(22.dp)
+            )
+        }
+
+        IconButton(onClick = onSearchClick) {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = "Buscar",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        IconButton(onClick = onCleanClick) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = "Más",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
 }
 
 /**
- * Cuadrícula de 8 categorías al estilo EX / ES File Explorer (4x2)
+ * Tarjetas Duales Superiores (Internal Storage + Analizador de archivos)
  */
 @Composable
-fun ExCategoriesGrid(
+fun ExDualStorageCards(
+    storageInfo: StorageInfo?,
+    onStorageClick: () -> Unit,
+    onAnalyzeClick: () -> Unit
+) {
+    val usedPercentage = ((storageInfo?.usedPercentage ?: 0f) * 100).toInt()
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        // Tarjeta 1: Internal Storage con medidor circular
+        Card(
+            modifier = Modifier
+                .weight(1f)
+                .height(92.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .clickable(onClick = onStorageClick),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Medidor circular de porcentaje
+                Box(
+                    modifier = Modifier.size(46.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        progress = { storageInfo?.usedPercentage ?: 0f },
+                        modifier = Modifier.fillMaxSize(),
+                        strokeWidth = 4.dp,
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                    Text(
+                        text = "$usedPercentage%",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(10.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Internal Storage",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(3.dp))
+
+                    Text(
+                        text = "${storageInfo?.formattedUsed ?: "0 B"} / ${storageInfo?.formattedTotal ?: "0 B"}",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 10.5.sp
+                        ),
+                        color = Color(0xFFFF7043)
+                    )
+                }
+            }
+        }
+
+        // Tarjeta 2: Analizador de archivos
+        Card(
+            modifier = Modifier
+                .weight(1f)
+                .height(92.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .clickable(onClick = onAnalyzeClick),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Icono tipo Pie Chart
+                Box(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF29B6F6).copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PieChart,
+                        contentDescription = null,
+                        tint = Color(0xFF0288D1),
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(10.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Analizador",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(3.dp))
+
+                    Text(
+                        text = "Archivos para limpiar",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 10.5.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Cuadrícula de 12 Iconos estilo EX File Explorer (Squircles Sólidos con iconos blancos)
+ */
+@Composable
+fun ExIconsCategoryGrid(
     onCategoryClick: (FileCategory) -> Unit,
     onAppsClick: () -> Unit,
     onDownloadsClick: () -> Unit,
-    onTrashClick: () -> Unit
+    onCleanClick: () -> Unit,
+    onSafeClick: () -> Unit,
+    onFavoritesClick: () -> Unit,
+    onTrashClick: () -> Unit,
+    onStorageClick: () -> Unit
 ) {
-    data class CategoryItemDef(
+    data class ExIconItem(
         val title: String,
         val icon: ImageVector,
-        val tint: Color,
-        val container: Color,
+        val color: Color,
         val onClick: () -> Unit
     )
 
     val items = listOf(
-        CategoryItemDef("Imágenes", Icons.Default.Image, CategoryImage, CategoryImageContainer) { onCategoryClick(FileCategory.IMAGE) },
-        CategoryItemDef("Música", Icons.Default.AudioFile, CategoryAudio, CategoryAudioContainer) { onCategoryClick(FileCategory.AUDIO) },
-        CategoryItemDef("Videos", Icons.Default.VideoFile, CategoryVideo, CategoryVideoContainer) { onCategoryClick(FileCategory.VIDEO) },
-        CategoryItemDef("Documentos", Icons.Default.Description, CategoryDocument, CategoryDocumentContainer) { onCategoryClick(FileCategory.DOCUMENT) },
-        CategoryItemDef("Apps", Icons.Default.Apps, CategoryApk, CategoryApkContainer, onAppsClick),
-        CategoryItemDef("Comprimidos", Icons.Default.FolderZip, CategoryArchive, CategoryArchiveContainer) { onCategoryClick(FileCategory.ARCHIVE) },
-        CategoryItemDef("Descargas", Icons.Default.Download, CategoryDownloads, CategoryDownloadsContainer, onDownloadsClick),
-        CategoryItemDef("Papelera", Icons.Default.Delete, CategoryTrash, CategoryTrashContainer, onTrashClick)
+        // Fila 1
+        ExIconItem("Imágenes", Icons.Default.Image, Color(0xFFEF5350)) { onCategoryClick(FileCategory.IMAGE) },
+        ExIconItem("Videos", Icons.Default.Videocam, Color(0xFF29B6F6)) { onCategoryClick(FileCategory.VIDEO) },
+        ExIconItem("Audio", Icons.Default.Headphones, Color(0xFFAB47BC)) { onCategoryClick(FileCategory.AUDIO) },
+        ExIconItem("APP", Icons.Default.Android, Color(0xFF66BB6A), onAppsClick),
+
+        // Fila 2
+        ExIconItem("Limpiador", Icons.Default.CleaningServices, Color(0xFF26A69A), onCleanClick),
+        ExIconItem("Documentos", Icons.Default.Description, Color(0xFF1E88E5)) { onCategoryClick(FileCategory.DOCUMENT) },
+        ExIconItem("Descargas", Icons.Default.Download, Color(0xFF00ACC1), onDownloadsClick),
+        ExIconItem("Nuevos", Icons.Default.Schedule, Color(0xFFFFA726)) { onCategoryClick(FileCategory.DOCUMENT) },
+
+        // Fila 3
+        ExIconItem("Comprimido", Icons.Default.FolderZip, Color(0xFF42A5F5)) { onCategoryClick(FileCategory.ARCHIVE) },
+        ExIconItem("Carpeta segura", Icons.Default.Lock, Color(0xFF5C6BC0), onSafeClick),
+        ExIconItem("Favoritos", Icons.Default.Star, Color(0xFFFFCA28), onFavoritesClick),
+        ExIconItem("Papelera", Icons.Default.Delete, Color(0xFF78909C), onTrashClick)
     )
 
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        for (row in 0 until 2) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+        modifier = Modifier.padding(vertical = 4.dp)
+    ) {
+        for (rowIndex in 0 until 3) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                for (col in 0 until 4) {
-                    val index = row * 4 + col
-                    val def = items[index]
-                    ExCategoryCard(
-                        title = def.title,
-                        icon = def.icon,
-                        tintColor = def.tint,
-                        containerColor = def.container,
-                        onClick = def.onClick,
+                for (colIndex in 0 until 4) {
+                    val index = rowIndex * 4 + colIndex
+                    val item = items[index]
+                    ExSquircleGridItem(
+                        title = item.title,
+                        icon = item.icon,
+                        backgroundColor = item.color,
+                        onClick = item.onClick,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -630,106 +496,46 @@ fun ExCategoriesGrid(
 }
 
 @Composable
-fun ExCategoryCard(
+fun ExSquircleGridItem(
     title: String,
     icon: ImageVector,
-    tintColor: Color,
-    containerColor: Color,
+    backgroundColor: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    Column(
         modifier = modifier
-            .aspectRatio(0.92f)
-            .clip(RoundedCornerShape(18.dp))
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = containerColor),
-        border = BorderStroke(0.5.dp, tintColor.copy(alpha = 0.2f))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.9f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = title,
-                    tint = tintColor,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodySmall.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 11.5.sp
-                ),
-                color = Color(0xFF1E2025),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
-@Composable
-fun CollectionRowItem(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    tint: Color,
-    containerTint: Color = tint.copy(alpha = 0.12f),
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 13.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Squircle sólido estilo EX
         Box(
             modifier = Modifier
-                .size(42.dp)
-                .clip(RoundedCornerShape(13.dp))
-                .background(containerTint),
+                .size(54.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(backgroundColor),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
-                contentDescription = null,
-                tint = tint,
-                modifier = Modifier.size(22.dp)
+                contentDescription = title,
+                tint = Color.White,
+                modifier = Modifier.size(28.dp)
             )
         }
-        Spacer(modifier = Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-            )
-            Spacer(modifier = Modifier.height(1.dp))
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Icon(
-            imageVector = Icons.Default.ChevronRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+
+        Spacer(modifier = Modifier.height(7.dp))
+
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontWeight = FontWeight.Medium,
+                fontSize = 11.5.sp
+            ),
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

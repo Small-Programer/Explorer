@@ -77,7 +77,10 @@ data class ExplorerUiState(
     // Limpieza Inteligente
     val junkFilesCount: Int = 0,
     val largeFiles: List<FileItem> = emptyList(),
-    val isCleaning: Boolean = false
+    val isCleaning: Boolean = false,
+
+    // Opciones avanzadas EX
+    val showHidden: Boolean = false
 ) {
     val isSelectionMode: Boolean get() = selectedFiles.isNotEmpty()
     
@@ -139,10 +142,17 @@ class ExplorerViewModel(application: Application) : AndroidViewModel(application
             _uiState.update { it.copy(isLoading = true, currentPath = path, selectedFiles = emptySet()) }
             val items = repository.getFiles(
                 directoryPath = path,
-                sortOrder = _uiState.value.sortOrder
+                sortOrder = _uiState.value.sortOrder,
+                showHidden = _uiState.value.showHidden
             )
             _uiState.update { it.copy(files = items, isLoading = false) }
         }
+    }
+
+    fun toggleShowHidden() {
+        val newValue = !_uiState.value.showHidden
+        _uiState.update { it.copy(showHidden = newValue) }
+        loadFiles(_uiState.value.currentPath)
     }
 
     fun loadStorageInfo() {

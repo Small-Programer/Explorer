@@ -38,6 +38,8 @@ fun FileListItem(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     onMoreClick: () -> Unit,
+    iconSize: androidx.compose.ui.unit.Dp = 46.dp,
+    showDetails: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val backgroundColor = if (isSelected) {
@@ -66,7 +68,7 @@ fun FileListItem(
             )
         }
 
-        FileIconThumbnail(item = item, size = 46.dp)
+        FileIconThumbnail(item = item, size = iconSize)
 
         Spacer(modifier = Modifier.width(14.dp))
 
@@ -76,14 +78,14 @@ fun FileListItem(
                     text = item.name,
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontWeight = FontWeight.Medium,
-                        fontSize = 15.sp
+                        fontSize = if (showDetails) 15.sp else 14.sp
                     ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false)
                 )
 
-                if (item.extension.isNotBlank() && !item.isDirectory) {
+                if (showDetails && item.extension.isNotBlank() && !item.isDirectory) {
                     Spacer(modifier = Modifier.width(6.dp))
                     Surface(
                         shape = RoundedCornerShape(4.dp),
@@ -102,24 +104,26 @@ fun FileListItem(
                 }
             }
 
-            Spacer(modifier = Modifier.height(2.dp))
+            if (showDetails) {
+                Spacer(modifier = Modifier.height(2.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = item.formattedSize,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "  •  ",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                )
-                Text(
-                    text = item.formattedDate,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = item.formattedSize,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "  •  ",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    )
+                    Text(
+                        text = item.formattedDate,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
 
@@ -144,6 +148,7 @@ fun FileGridItem(
     isSelectionMode: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
+    thumbnailSize: androidx.compose.ui.unit.Dp = 58.dp,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -176,7 +181,7 @@ fun FileGridItem(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                FileIconThumbnail(item = item, size = 58.dp)
+                FileIconThumbnail(item = item, size = thumbnailSize)
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
                     text = item.name,

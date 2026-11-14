@@ -1,5 +1,6 @@
 package com.example.explorer.ui.screens
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -32,6 +33,8 @@ fun ExplorerScreen(
     isLoading: Boolean,
     selectedFiles: Set<FileItem>,
     isGridView: Boolean,
+    viewMode: FileViewMode = if (isGridView) FileViewMode.LARGE else FileViewMode.DETAILS,
+    isDarkTheme: Boolean = isSystemInDarkTheme(),
     isSearchActive: Boolean,
     searchQuery: String,
     searchResults: List<FileItem>,
@@ -43,6 +46,7 @@ fun ExplorerScreen(
     onFileLongClick: (FileItem) -> Unit,
     onMoreClick: (FileItem) -> Unit,
     onToggleViewMode: () -> Unit,
+    onSelectViewMode: (FileViewMode) -> Unit = {},
     onOpenSortDialog: () -> Unit,
     onOpenCreateFolderDialog: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
@@ -148,12 +152,10 @@ fun ExplorerScreen(
                         IconButton(onClick = onSearchToggle) {
                             Icon(Icons.Default.Search, contentDescription = "Buscar")
                         }
-                        IconButton(onClick = onToggleViewMode) {
-                            Icon(
-                                imageVector = if (isGridView) Icons.AutoMirrored.Filled.ViewList else Icons.Default.GridView,
-                                contentDescription = "Cambiar vista"
-                            )
-                        }
+                        FileViewModeMenuButton(
+                            currentMode = viewMode,
+                            onSelectMode = onSelectViewMode
+                        )
                         IconButton(onClick = onOpenSortDialog) {
                             Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Ordenar")
                         }
@@ -208,9 +210,10 @@ fun ExplorerScreen(
             }
 
             if (isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(strokeWidth = 3.dp)
-                }
+                GlassLoadingView(
+                    message = "Cargando carpeta...",
+                    isDark = isDarkTheme
+                )
             } else if (displayFiles.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(
@@ -246,55 +249,15 @@ fun ExplorerScreen(
                     }
                 }
             } else {
-                if (isGridView) {
-                    LazyVerticalGrid(
-                        columns = GridCells.Adaptive(minSize = 115.dp),
-                        modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
-                        contentPadding = PaddingValues(top = 8.dp, bottom = 88.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        items(displayFiles, key = { it.path }) { item ->
-                            val isSelected = selectedFiles.contains(item)
-                            FileGridItem(
-                                item = item,
-                                isSelected = isSelected,
-                                isSelectionMode = isSelectionMode,
-                                onClick = {
-                                    if (isSelectionMode) {
-                                        onFileLongClick(item)
-                                    } else {
-                                        onFileClick(item)
-                                    }
-                                },
-                                onLongClick = { onFileLongClick(item) }
-                            )
-                        }
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(top = 4.dp, bottom = 88.dp)
-                    ) {
-                        items(displayFiles, key = { it.path }) { item ->
-                            val isSelected = selectedFiles.contains(item)
-                            FileListItem(
-                                item = item,
-                                isSelected = isSelected,
-                                isSelectionMode = isSelectionMode,
-                                onClick = {
-                                    if (isSelectionMode) {
-                                        onFileLongClick(item)
-                                    } else {
-                                        onFileClick(item)
-                                    }
-                                },
-                                onLongClick = { onFileLongClick(item) },
-                                onMoreClick = { onMoreClick(item) }
-                            )
-                        }
-                    }
-                }
+                FileItemsBrowser(
+                    files = displayFiles,
+                    viewMode = viewMode,
+                    selectedFiles = selectedFiles,
+                    isSelectionMode = isSelectionMode,
+                    onFileClick = onFileClick,
+                    onFileLongClick = onFileLongClick,
+                    onMoreClick = onMoreClick
+                )
             }
         }
     }

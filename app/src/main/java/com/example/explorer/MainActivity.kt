@@ -212,6 +212,9 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
                 category = uiState.selectedCategory!!,
                 files = uiState.categoryFiles,
                 isLoading = uiState.isCategoryLoading,
+                viewMode = uiState.viewMode,
+                onSelectViewMode = { viewModel.setViewMode(it) },
+                isDarkTheme = isDarkTheme,
                 onBackClick = { viewModel.closeCategory() },
                 onFileClick = { item ->
                     if (item.isDirectory) {
@@ -278,6 +281,8 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
                 isLoading = uiState.isLoading,
                 selectedFiles = uiState.selectedFiles,
                 isGridView = uiState.isGridView,
+                viewMode = uiState.viewMode,
+                isDarkTheme = isDarkTheme,
                 isSearchActive = uiState.isSearchActive,
                 searchQuery = uiState.searchQuery,
                 searchResults = uiState.searchResults,
@@ -302,6 +307,7 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
                 onFileLongClick = { item -> viewModel.toggleSelection(item) },
                 onMoreClick = { item -> viewModel.showDialog(DialogType.FileDetails(item)) },
                 onToggleViewMode = { viewModel.toggleViewMode() },
+                onSelectViewMode = { viewModel.setViewMode(it) },
                 onOpenSortDialog = { viewModel.showDialog(DialogType.SortPicker) },
                 onOpenCreateFolderDialog = { viewModel.showDialog(DialogType.CreateFolder) },
                 onSearchQueryChanged = { query -> viewModel.onSearchQueryChanged(query) },

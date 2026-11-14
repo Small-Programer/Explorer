@@ -10,6 +10,7 @@ import com.example.explorer.domain.model.FileCategory
 import com.example.explorer.domain.model.FileItem
 import com.example.explorer.domain.model.SortOrder
 import com.example.explorer.domain.model.StorageInfo
+import com.example.explorer.ui.components.FileViewMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -53,6 +54,7 @@ data class ExplorerUiState(
     val clipboard: ClipboardData? = null,
     val sortOrder: SortOrder = SortOrder.NAME_ASC,
     val isGridView: Boolean = false,
+    val viewMode: FileViewMode = FileViewMode.DETAILS,
     val searchQuery: String = "",
     val isSearchActive: Boolean = false,
     val searchResults: List<FileItem> = emptyList(),
@@ -107,7 +109,10 @@ class ExplorerViewModel(application: Application) : AndroidViewModel(application
 
     private val _uiState = MutableStateFlow(
         ExplorerUiState(
-            darkModeOverride = if (prefs.contains("dark_mode")) prefs.getBoolean("dark_mode", false) else null
+            darkModeOverride = if (prefs.contains("dark_mode")) prefs.getBoolean("dark_mode", false) else null,
+            viewMode = prefs.getString("view_mode", null)
+                ?.let { name -> FileViewMode.entries.find { it.name == name } }
+                ?: FileViewMode.DETAILS
         )
     )
     val uiState: StateFlow<ExplorerUiState> = _uiState.asStateFlow()
@@ -354,7 +359,13 @@ class ExplorerViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun toggleViewMode() {
-        _uiState.update { it.copy(isGridView = !it.isGridView) }
+        val nextMode = if (_uiState.value.viewMode.isGrid) FileViewMode.DETAILS else FileViewMode.LARGE
+        setViewMode(nextMode)
+    }
+
+    fun setViewMode(mode: FileViewMode) {
+        prefs.edit().putString("view_mode", mode.name).apply()
+        _uiState.update { it.copy(viewMode = mode, isGridView = mode.isGrid) }
     }
 
     fun setSortOrder(order: SortOrder) {

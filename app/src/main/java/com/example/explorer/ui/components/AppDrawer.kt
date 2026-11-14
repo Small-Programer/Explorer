@@ -31,6 +31,8 @@ fun AppDrawerContent(
     storageInfo: StorageInfo?,
     showHidden: Boolean = false,
     onToggleShowHidden: () -> Unit = {},
+    isDarkTheme: Boolean = false,
+    onToggleDarkTheme: () -> Unit = {},
     onNavigateHome: () -> Unit,
     onNavigateInternalStorage: () -> Unit,
     onNavigateCategory: (FileCategory) -> Unit,
@@ -290,6 +292,32 @@ fun AppDrawerContent(
                 Switch(
                     checked = showHidden,
                     onCheckedChange = { onToggleShowHidden() }
+                )
+            }
+
+            // Modo Oscuro / Cristal Claro
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onToggleDarkTheme() }
+                    .padding(horizontal = 20.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = if (isDarkTheme) Icons.Default.DarkMode else Icons.Default.LightMode,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(
+                    text = "Modo Oscuro",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f)
+                )
+                Switch(
+                    checked = isDarkTheme,
+                    onCheckedChange = { onToggleDarkTheme() }
                 )
             }
 

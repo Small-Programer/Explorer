@@ -7,6 +7,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -39,7 +40,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            ExplorerTheme {
+            val uiState by viewModel.uiState.collectAsState()
+            val isDarkTheme = uiState.darkModeOverride ?: isSystemInDarkTheme()
+
+            ExplorerTheme(darkTheme = isDarkTheme) {
                 val context = LocalContext.current
                 var hasPermission by remember { mutableStateOf(PermissionUtils.hasStoragePermission(context)) }
 
@@ -80,6 +84,7 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
     var selectedTab by remember { mutableIntStateOf(1) } // Default tab: Explorar
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
+    val isDarkTheme = uiState.darkModeOverride ?: isSystemInDarkTheme()
 
     LaunchedEffect(uiState.toastMessage) {
         uiState.toastMessage?.let { msg ->
@@ -122,6 +127,8 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
                 storageInfo = uiState.storageInfo,
                 showHidden = uiState.showHidden,
                 onToggleShowHidden = { viewModel.toggleShowHidden() },
+                isDarkTheme = isDarkTheme,
+                onToggleDarkTheme = { viewModel.toggleDarkMode(isDarkTheme) },
                 onNavigateHome = {
                     selectedTab = 1
                     viewModel.setScreen(ActiveScreen.BROWSE)
@@ -335,6 +342,8 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
                 1 -> HomeScreen(
                     storageInfo = uiState.storageInfo,
                     recentFiles = uiState.recentFiles,
+                    isDarkTheme = isDarkTheme,
+                    onToggleDarkTheme = { viewModel.toggleDarkMode(isDarkTheme) },
                     onMenuClick = { coroutineScope.launch { drawerState.open() } },
                     onCategoryClick = { cat -> viewModel.openCategory(cat) },
                     onFileClick = { item ->

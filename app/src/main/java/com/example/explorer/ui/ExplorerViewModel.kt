@@ -80,7 +80,8 @@ data class ExplorerUiState(
     val isCleaning: Boolean = false,
 
     // Opciones avanzadas EX
-    val showHidden: Boolean = false
+    val showHidden: Boolean = false,
+    val darkModeOverride: Boolean? = null
 ) {
     val isSelectionMode: Boolean get() = selectedFiles.isNotEmpty()
     
@@ -102,8 +103,13 @@ data class ExplorerUiState(
 class ExplorerViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = FileRepository(application)
+    private val prefs = application.getSharedPreferences("explorer_prefs", android.content.Context.MODE_PRIVATE)
 
-    private val _uiState = MutableStateFlow(ExplorerUiState())
+    private val _uiState = MutableStateFlow(
+        ExplorerUiState(
+            darkModeOverride = if (prefs.contains("dark_mode")) prefs.getBoolean("dark_mode", false) else null
+        )
+    )
     val uiState: StateFlow<ExplorerUiState> = _uiState.asStateFlow()
 
     init {
@@ -153,6 +159,12 @@ class ExplorerViewModel(application: Application) : AndroidViewModel(application
         val newValue = !_uiState.value.showHidden
         _uiState.update { it.copy(showHidden = newValue) }
         loadFiles(_uiState.value.currentPath)
+    }
+
+    fun toggleDarkMode(currentlyDark: Boolean) {
+        val newValue = !currentlyDark
+        prefs.edit().putBoolean("dark_mode", newValue).apply()
+        _uiState.update { it.copy(darkModeOverride = newValue) }
     }
 
     fun loadStorageInfo() {

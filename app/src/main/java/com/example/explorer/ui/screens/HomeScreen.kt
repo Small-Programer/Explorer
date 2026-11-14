@@ -6,6 +6,9 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -165,18 +168,19 @@ fun HomeScreen(
                                     }
                                 }
                             } else {
-                                LazyColumn(
+                                LazyVerticalGrid(
+                                    columns = GridCells.Fixed(2),
                                     modifier = Modifier.fillMaxSize(),
-                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
                                     items(recentFiles.take(12)) { item ->
-                                        FileListItem(
+                                        RecentMediaCard(
                                             item = item,
-                                            isSelected = false,
-                                            isSelectionMode = false,
                                             onClick = { onFileClick(item) },
-                                            onLongClick = {},
-                                            onMoreClick = { onMoreClick(item) }
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(185.dp)
                                         )
                                     }
                                 }

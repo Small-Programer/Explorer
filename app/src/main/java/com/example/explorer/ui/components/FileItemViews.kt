@@ -254,7 +254,7 @@ fun RecentMediaCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(98.dp)
+                    .weight(1f)
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                 contentAlignment = Alignment.Center
             ) {

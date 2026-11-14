@@ -212,8 +212,8 @@ fun MainAppContent(viewModel: ExplorerViewModel) {
                 category = uiState.selectedCategory!!,
                 files = uiState.categoryFiles,
                 isLoading = uiState.isCategoryLoading,
-                viewMode = uiState.viewMode,
-                onSelectViewMode = { viewModel.setViewMode(it) },
+                viewMode = uiState.categoryViewMode,
+                onSelectViewMode = { viewModel.setCategoryViewMode(it) },
                 isDarkTheme = isDarkTheme,
                 onBackClick = { viewModel.closeCategory() },
                 onFileClick = { item ->

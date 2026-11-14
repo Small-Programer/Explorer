@@ -55,6 +55,7 @@ data class ExplorerUiState(
     val sortOrder: SortOrder = SortOrder.NAME_ASC,
     val isGridView: Boolean = false,
     val viewMode: FileViewMode = FileViewMode.DETAILS,
+    val categoryViewMode: FileViewMode = FileViewMode.LARGE,
     val searchQuery: String = "",
     val isSearchActive: Boolean = false,
     val searchResults: List<FileItem> = emptyList(),
@@ -112,7 +113,10 @@ class ExplorerViewModel(application: Application) : AndroidViewModel(application
             darkModeOverride = if (prefs.contains("dark_mode")) prefs.getBoolean("dark_mode", false) else null,
             viewMode = prefs.getString("view_mode", null)
                 ?.let { name -> FileViewMode.entries.find { it.name == name } }
-                ?: FileViewMode.DETAILS
+                ?: FileViewMode.DETAILS,
+            categoryViewMode = prefs.getString("category_view_mode", null)
+                ?.let { name -> FileViewMode.entries.find { it.name == name } }
+                ?: FileViewMode.LARGE
         )
     )
     val uiState: StateFlow<ExplorerUiState> = _uiState.asStateFlow()
@@ -366,6 +370,11 @@ class ExplorerViewModel(application: Application) : AndroidViewModel(application
     fun setViewMode(mode: FileViewMode) {
         prefs.edit().putString("view_mode", mode.name).apply()
         _uiState.update { it.copy(viewMode = mode, isGridView = mode.isGrid) }
+    }
+
+    fun setCategoryViewMode(mode: FileViewMode) {
+        prefs.edit().putString("category_view_mode", mode.name).apply()
+        _uiState.update { it.copy(categoryViewMode = mode) }
     }
 
     fun setSortOrder(order: SortOrder) {

@@ -1,16 +1,15 @@
 package com.example.explorer.ui.screens
 
 import android.os.Environment
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -59,18 +58,20 @@ fun HomeScreen(
     val primaryTextColor = if (isDarkTheme) Color(0xFFF1F5F9) else Color(0xFF0F172A)
     val secondaryTextColor = if (isDarkTheme) Color(0xFF94A3B8) else Color(0xFF475569)
 
-    Box(modifier = modifier.fillMaxSize()) {
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        val isWideTablet = maxWidth >= 700.dp
+
         // Fondo ambiental suave (Claro pastel / Oscuro aurora)
         GlassAmbientBackground(isDark = isDarkTheme)
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            // 1. Barra Superior flotante de cristal tipo píldora ("Hogar")
-            item {
+        if (isWideTablet) {
+            // Diseño adaptativo para Tablet (2 paneles equilibrados sin botones estirados)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
                 Spacer(modifier = Modifier.height(6.dp))
                 GlassTopBar(
                     isDark = isDarkTheme,
@@ -79,50 +80,165 @@ fun HomeScreen(
                     onToggleDarkTheme = onToggleDarkTheme,
                     onSearchClick = onSearchClick
                 )
-            }
 
-            // 2. Tarjeta Hero de Almacenamiento Interno + botón Analizador (Opción B)
-            item {
-                GlassStorageHeroCard(
-                    isDark = isDarkTheme,
-                    primaryTextColor = primaryTextColor,
-                    secondaryTextColor = secondaryTextColor,
-                    storageInfo = storageInfo,
-                    onStorageClick = onInternalStorageClick,
-                    onAnalyzeClick = onOpenStorageClick
-                )
-            }
-
-            // 3. Cuadrícula 3x3 de Botones Grandes en Cristal (Neón solo al seleccionar)
-            item {
-                GlassCategoryGrid(
-                    isDark = isDarkTheme,
-                    primaryTextColor = primaryTextColor,
-                    onCategoryClick = onCategoryClick,
-                    onAppsClick = onAppsClick,
-                    onDownloadsClick = { onShortcutClick("$rootPath/Download") },
-                    onSafeClick = onSafeFolderClick,
-                    onFavoritesClick = onFavoritesClick,
-                    onTrashClick = onTrashClick
-                )
-            }
-
-            // 4. Archivos Recientes en tarjeta de cristal
-            item {
-                GlassCard(
-                    isDark = isDarkTheme,
-                    shape = RoundedCornerShape(22.dp),
-                    modifier = Modifier.fillMaxWidth()
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(bottom = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(18.dp)
                 ) {
+                    // Panel izquierdo: Almacenamiento + Cuadrícula 3x3 de botones grandes proporcionados
                     Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
+                            .weight(1.1f)
+                            .fillMaxHeight()
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                        GlassStorageHeroCard(
+                            isDark = isDarkTheme,
+                            primaryTextColor = primaryTextColor,
+                            secondaryTextColor = secondaryTextColor,
+                            storageInfo = storageInfo,
+                            onStorageClick = onInternalStorageClick,
+                            onAnalyzeClick = onOpenStorageClick
+                        )
+
+                        GlassCategoryGrid(
+                            isDark = isDarkTheme,
+                            primaryTextColor = primaryTextColor,
+                            tileHeightDp = 114,
+                            onCategoryClick = onCategoryClick,
+                            onAppsClick = onAppsClick,
+                            onDownloadsClick = { onShortcutClick("$rootPath/Download") },
+                            onSafeClick = onSafeFolderClick,
+                            onFavoritesClick = onFavoritesClick,
+                            onTrashClick = onTrashClick
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    // Panel derecho: Archivos Recientes en tarjeta de cristal amplia
+                    GlassCard(
+                        isDark = isDarkTheme,
+                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier
+                            .weight(0.9f)
+                            .fillMaxHeight()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(18.dp)
+                        ) {
+                            Text(
+                                text = "Archivos Recientes",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 17.sp
+                                ),
+                                color = primaryTextColor
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            if (recentFiles.isEmpty()) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Icon(
+                                            imageVector = Icons.Default.AccessTime,
+                                            contentDescription = null,
+                                            tint = secondaryTextColor.copy(alpha = 0.7f),
+                                            modifier = Modifier.size(34.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = "No hay archivos recientes aún",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = secondaryTextColor
+                                        )
+                                    }
+                                }
+                            } else {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    items(recentFiles.take(12)) { item ->
+                                        FileListItem(
+                                            item = item,
+                                            isSelected = false,
+                                            isSelectionMode = false,
+                                            onClick = { onFileClick(item) },
+                                            onLongClick = {},
+                                            onMoreClick = { onMoreClick(item) }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            // Diseño vertical para Teléfono (Opción B)
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                item {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    GlassTopBar(
+                        isDark = isDarkTheme,
+                        primaryTextColor = primaryTextColor,
+                        onMenuClick = onMenuClick,
+                        onToggleDarkTheme = onToggleDarkTheme,
+                        onSearchClick = onSearchClick
+                    )
+                }
+
+                item {
+                    GlassStorageHeroCard(
+                        isDark = isDarkTheme,
+                        primaryTextColor = primaryTextColor,
+                        secondaryTextColor = secondaryTextColor,
+                        storageInfo = storageInfo,
+                        onStorageClick = onInternalStorageClick,
+                        onAnalyzeClick = onOpenStorageClick
+                    )
+                }
+
+                item {
+                    GlassCategoryGrid(
+                        isDark = isDarkTheme,
+                        primaryTextColor = primaryTextColor,
+                        tileHeightDp = 108,
+                        onCategoryClick = onCategoryClick,
+                        onAppsClick = onAppsClick,
+                        onDownloadsClick = { onShortcutClick("$rootPath/Download") },
+                        onSafeClick = onSafeFolderClick,
+                        onFavoritesClick = onFavoritesClick,
+                        onTrashClick = onTrashClick
+                    )
+                }
+
+                item {
+                    GlassCard(
+                        isDark = isDarkTheme,
+                        shape = RoundedCornerShape(22.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
                         ) {
                             Text(
                                 text = "Archivos Recientes",
@@ -132,79 +248,51 @@ fun HomeScreen(
                                 ),
                                 color = primaryTextColor
                             )
-                        }
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
 
-                        if (recentFiles.isEmpty()) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 18.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(
-                                        imageVector = Icons.Default.AccessTime,
-                                        contentDescription = null,
-                                        tint = secondaryTextColor.copy(alpha = 0.7f),
-                                        modifier = Modifier.size(28.dp)
-                                    )
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    Text(
-                                        text = "No hay archivos recientes aún",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = secondaryTextColor
-                                    )
+                            if (recentFiles.isEmpty()) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 18.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Icon(
+                                            imageVector = Icons.Default.AccessTime,
+                                            contentDescription = null,
+                                            tint = secondaryTextColor.copy(alpha = 0.7f),
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Text(
+                                            text = "No hay archivos recientes aún",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = secondaryTextColor
+                                        )
+                                    }
                                 }
-                            }
-                        } else {
-                            LazyRow(
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                contentPadding = PaddingValues(vertical = 4.dp)
-                            ) {
-                                items(recentFiles.take(8)) { item ->
-                                    RecentMediaCard(
-                                        item = item,
-                                        onClick = { onFileClick(item) }
-                                    )
+                            } else {
+                                LazyRow(
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    contentPadding = PaddingValues(vertical = 4.dp)
+                                ) {
+                                    items(recentFiles.take(8)) { item ->
+                                        RecentMediaCard(
+                                            item = item,
+                                            onClick = { onFileClick(item) }
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            // 5. Lista vertical complementaria si hay más recientes
-            if (recentFiles.size > 8) {
                 item {
-                    Text(
-                        text = "Más Recientes",
-                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                        color = secondaryTextColor
-                    )
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
-
-                items(recentFiles.drop(8)) { item ->
-                    GlassCard(
-                        isDark = isDarkTheme,
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        FileListItem(
-                            item = item,
-                            isSelected = false,
-                            isSelectionMode = false,
-                            onClick = { onFileClick(item) },
-                            onLongClick = {},
-                            onMoreClick = { onMoreClick(item) }
-                        )
-                    }
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(80.dp))
             }
         }
     }
@@ -255,7 +343,6 @@ fun GlassTopBar(
                 modifier = Modifier.weight(1f)
             )
 
-            // Acceso rápido Modo Claro / Oscuro
             IconButton(onClick = onToggleDarkTheme) {
                 Icon(
                     imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
@@ -289,7 +376,7 @@ fun GlassStorageHeroCard(
 ) {
     val usedFloat = (storageInfo?.usedPercentage ?: 0f).coerceIn(0f, 1f)
     val usedPercentage = (usedFloat * 100).toInt()
-    val accentRingColor = if (isDark) NeonCyanSoft else Color(0xFF38BDF8)
+    val accentRingColor = if (isDark) NeonCyanSoft else Color(0xFF0EA5E9)
     val trackColor = if (isDark) Color.White.copy(alpha = 0.12f) else Color(0xFFCBD5E1).copy(alpha = 0.45f)
 
     GlassCard(
@@ -341,7 +428,6 @@ fun GlassStorageHeroCard(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Botón píldora "Analizador" en cristal
                 GlassCard(
                     isDark = isDark,
                     shape = RoundedCornerShape(50),
@@ -373,7 +459,6 @@ fun GlassStorageHeroCard(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Medidor circular de porcentaje
             Box(
                 modifier = Modifier.size(76.dp),
                 contentAlignment = Alignment.Center
@@ -406,6 +491,7 @@ fun GlassStorageHeroCard(
 fun GlassCategoryGrid(
     isDark: Boolean,
     primaryTextColor: Color,
+    tileHeightDp: Int = 108,
     onCategoryClick: (FileCategory) -> Unit,
     onAppsClick: () -> Unit,
     onDownloadsClick: () -> Unit,
@@ -423,17 +509,12 @@ fun GlassCategoryGrid(
     var selectedTile by remember { mutableStateOf<String?>(null) }
 
     val items = listOf(
-        // Fila 1
         GlassTileItem("Imágenes", Icons.Default.Image, Color(0xFF0EA5E9)) { onCategoryClick(FileCategory.IMAGE) },
         GlassTileItem("Videos", Icons.Default.OndemandVideo, Color(0xFF8B5CF6)) { onCategoryClick(FileCategory.VIDEO) },
         GlassTileItem("Audio", Icons.Default.MusicNote, Color(0xFF10B981)) { onCategoryClick(FileCategory.AUDIO) },
-
-        // Fila 2
         GlassTileItem("Documentos", Icons.Default.Description, Color(0xFF3B82F6)) { onCategoryClick(FileCategory.DOCUMENT) },
         GlassTileItem("Descargas", Icons.Default.Download, Color(0xFF06B6D4), onDownloadsClick),
         GlassTileItem("Apps", Icons.Default.Apps, Color(0xFF6366F1), onAppsClick),
-
-        // Fila 3
         GlassTileItem("Favoritos", Icons.Default.StarOutline, Color(0xFFF59E0B), onFavoritesClick),
         GlassTileItem("Carpeta Segura", Icons.Default.FolderShared, Color(0xFF64748B), onSafeClick),
         GlassTileItem("Papelera", Icons.Default.DeleteOutline, Color(0xFFEF4444), onTrashClick)
@@ -457,6 +538,7 @@ fun GlassCategoryGrid(
                         isDark = isDark,
                         isSelected = selectedTile == item.title,
                         primaryTextColor = primaryTextColor,
+                        tileHeightDp = tileHeightDp,
                         onClick = {
                             selectedTile = item.title
                             item.onClick()
@@ -477,6 +559,7 @@ fun GlassCategoryTile(
     isDark: Boolean,
     isSelected: Boolean,
     primaryTextColor: Color,
+    tileHeightDp: Int = 108,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -486,7 +569,7 @@ fun GlassCategoryTile(
         shape = RoundedCornerShape(22.dp),
         elevation = 4.dp,
         onClick = onClick,
-        modifier = modifier.height(106.dp)
+        modifier = modifier.height(tileHeightDp.dp)
     ) {
         Column(
             modifier = Modifier
@@ -497,10 +580,10 @@ fun GlassCategoryTile(
         ) {
             Box(
                 modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(14.dp))
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(16.dp))
                     .background(
-                        accentTint.copy(alpha = if (isDark) 0.20f else 0.14f)
+                        accentTint.copy(alpha = if (isDark) 0.22f else 0.16f)
                     ),
                 contentAlignment = Alignment.Center
             ) {
@@ -508,7 +591,7 @@ fun GlassCategoryTile(
                     imageVector = icon,
                     contentDescription = title,
                     tint = if (isSelected) NeonCyanSoft else if (isDark) Color(0xFFE2E8F0) else Color(0xFF1E293B),
-                    modifier = Modifier.size(26.dp)
+                    modifier = Modifier.size(30.dp)
                 )
             }
 
@@ -517,9 +600,9 @@ fun GlassCategoryTile(
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodySmall.copy(
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                    fontSize = 12.5.sp,
-                    lineHeight = 14.sp
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                    fontSize = 13.sp,
+                    lineHeight = 15.sp
                 ),
                 color = primaryTextColor,
                 textAlign = TextAlign.Center,

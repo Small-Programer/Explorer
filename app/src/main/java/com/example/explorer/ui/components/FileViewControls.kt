@@ -33,11 +33,11 @@ enum class FileViewMode(
     val thumbnailDp: Int,
     val icon: ImageVector
 ) {
-    EXTRA_LARGE("Iconos muy grandes", true, 165, 102, Icons.Default.PhotoSizeSelectLarge),
-    LARGE("Iconos grandes", true, 128, 76, Icons.Default.GridView),
-    MEDIUM("Iconos medianos", true, 98, 56, Icons.Default.Apps),
-    LIST("Lista compacta", false, 0, 36, Icons.AutoMirrored.Filled.FormatListBulleted),
-    DETAILS("Detalles", false, 0, 46, Icons.AutoMirrored.Filled.ViewList)
+    EXTRA_LARGE("Iconos muy grandes", true, 210, 140, Icons.Default.PhotoSizeSelectLarge),
+    LARGE("Iconos grandes", true, 155, 96, Icons.Default.GridView),
+    MEDIUM("Iconos medianos", true, 112, 64, Icons.Default.Apps),
+    LIST("Lista compacta", false, 0, 38, Icons.AutoMirrored.Filled.FormatListBulleted),
+    DETAILS("Detalles", false, 0, 48, Icons.AutoMirrored.Filled.ViewList)
 }
 
 /**

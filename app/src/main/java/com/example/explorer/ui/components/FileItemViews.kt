@@ -179,10 +179,29 @@ fun FileGridItem(
                     .fillMaxSize()
                     .padding(10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                FileIconThumbnail(item = item, size = thumbnailSize)
-                Spacer(modifier = Modifier.height(10.dp))
+                if (item.category == FileCategory.IMAGE && item.file.exists()) {
+                    AsyncImage(
+                        model = item.file,
+                        contentDescription = item.name,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        FileIconThumbnail(item = item, size = thumbnailSize)
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = item.name,
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
